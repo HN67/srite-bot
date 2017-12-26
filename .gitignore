@@ -1,0 +1,4 @@
+# Compiled Modules #
+*.pycache
+# Non-Compiled Sensitive Bot Information #
+SriteBotInfo.py
