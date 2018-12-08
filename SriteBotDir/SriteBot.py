@@ -1,190 +1,408 @@
-#HN67's SriteBot
-#Invite URL: https://discordapp.com/oauth2/authorize?&client_id=348653600345423873&scope=bot&permissions=0
+# HN67's SriteBot
+# Invite URL: https://discordapp.com/oauth2/authorize?&client_id=348653600345423873&scope=bot&permissions=0
 
-#Import various modules
-import discord
+# Import various modules
+
+# Import core modules for discord API
+import discord as discord
 from discord.ext import commands
+import asyncio
 
+# Import directory and system modules
 import os
 from pathlib import Path
 
+# Import core library modules
 import random
 import re
+import threading
+from datetime import datetime
+import time
 
 import json
 
+# Import custom HN67 scripts
+import Maze
+import AltChain
+import Spam
+
+# Import sensitive bot info
 import SriteBotInfo
 
-#Set cwd so that bot can be run from anywhere and still functions correctly
+# Set cwd so that bot can be run from anywhere and still functions correctly
 os.chdir(SriteBotInfo.directory)
 
-#Backup data
-'''
-with open("SriteBotData.json","r") as file:
-    data = json.load(file)
-
-with open("SriteBotDataBackup.json","r") as file:
-    backup = json.load(file)
-
-backup[max([int(i) for i in list(backup)])+1] = data
-
-with open("SriteBotDataBackup.json","w") as file:
-    json.dump(backup,file)
-'''
-
+# Debug method
 def debug_info(*messages):
     '''Function for printing seperate information chunks'''
+    # Prints each debug in the var-arg
     for line in messages:
         print(line)
+    # Prints finishing line
     print("-----")
 
-#Initialize bot
-bot = commands.Bot(command_prefix = "s:",description = "General bot created by HN67")
+# Ban-check method
+async def check_bans(ctx):
+    with open("banned.json", "r") as file:
+        bans = json.load(file)
+    debug_info(ctx.author.id,bans)
+    if str(ctx.author.id) in bans:
+        await ctx.send("Sorry, it seems you have been banned from parts of SriteBot")
+        await ctx.send("If you think this is an error, please contact @HN67")
+        return False
+    else:
+        return True
+
+# Initialize bot
+bot = commands.Bot(command_prefix="s:", description="General bot created by HN67")
 
 @bot.event
 async def on_ready():
     debug_info("Bot logged in as",
                bot.user.name,
                bot.user.id)
-    await bot.change_presence(game=discord.Game(name=(bot.command_prefix+"help")))
+    await bot.change_presence(game=discord.Game(name=(bot.command_prefix + "help")))
     debug_info("Finished setup")
+
 
 @bot.event
 async def on_message(message):
-    #Relable message content
-    text = message.content.lower()
-    if message.author.id != 348653600345423873:
-        '''
-        #Change FredBoat nickname based on song queued
-        if text.startswith(";;play "):
-            #Trim message
-            songName = text[7:32]
-            #Make sure input is not number, because that is likely selecting
-            #from FredBoat options
-            if not songName.isdigit():
-                #Get FredBoat member object
-                fred = message.guild.get_member(184405311681986560)
-                #Change FredBoat nick and output confirmation
-                await fred.edit(nick="unmute for "+songName)
-                await message.channel.send("Changed "+str(fred)+"'s Nickname")
-                debug_info("Changed fredboat nick")
-        '''
-        #Search for certain phrases
-        if "im" in text:
-            await message.channel.send("hi {0}, im SriteBot".format(text[text.find("im")+2:].strip()))
-        elif "http" in text:
-            await message.channel.send("lmao tag me")
-        elif "lmao" in text:
-            await message.channel.send("tag me")
-        if "good bot" == text:
-            await message.channel.send("thanks hooman")
-        #Process commands module commands
-    await bot.process_commands(message)
-    
 
-@bot.command(short="Greets the bot",description="Gets the bot to reply with Hello,"
-             +"and is used to test a variety of things on backend")
+    # Relable message content
+    text = message.content.lower()
+    # Relable channel
+    channel = message.channel
+    # Relable author
+    author = message.author
+
+    # Make sure author is not SriteBot (prevent loops)
+    if message.author.id != 348653600345423873:
+        # Search for certain phrases
+        if "im " in text:
+            await channel.send("hi {0}, im SriteBot.".format(text[text.find("im") + 2:].strip()))
+        elif "http" in text:
+            if random.randint(1,2) == 1:
+                await channel.send("[removed]")
+        elif "lmao" in text:
+            await channel.send("tag me")
+        if "good bot" == text:
+            await channel.send("thanks hooman uwu")
+        elif "hello" == text:
+            await channel.send("owo whats this")
+        if "dab" in text:
+            await count_dabs(message, text, author, channel)
+
+    # Check for specific expected responses
+    # Check for timer stop
+    if (channel.id,author.id) in timeWait and text == "stop":
+        await time_response(message)
+
+    # Process commands module commands
+    await bot.process_commands(message)
+
+
+async def count_dabs(message, text, author, channel):
+    # Load count file
+    with open("count.json", "r") as file:
+        count = json.load(file)
+    # Save original
+    try:
+        original = count["dab"]["total"]
+    except KeyError:
+        original = 0
+    if not "dab" in count:
+        count["dab"] = {}
+    # Increment/Create dab counter
+    debug_info(count)
+    if "total" in count["dab"]:
+        count["dab"]["total"] += text.count("dab")
+    else:
+        count["dab"]["total"] = text.count("dab")
+    if author.name in count["dab"]:
+        count["dab"][author.name] += text.count("dab")
+    else:
+        count["dab"][author.name] = text.count("dab")
+    # Redump json file
+    with open("count.json", "w") as file:
+        json.dump(count, file)
+    # Display count
+    await channel.send("```Dab Count: {0}\nLast Dab: {1}```"
+                 .format(count["dab"]["total"],message.author))
+    if (original//1000) != (count["dab"]["total"]//1000):
+        await channel.send("Jesus, {} Dabs!".format(count["dab"]["total"]//1000*1000))
+
+
+
+@bot.command(short="Greets the bot", description="Gets the bot to reply with Hello,"
+                                                 + "and is used to test a variety of things on backend")
 async def hello(ctx):
     '''Replies with simple text'''
-    await ctx.send("Hi "+ctx.author.nick)
-    debug_info("Greeted user",ctx.author.id)
+    await ctx.send("Hi " + ctx.author.nick)
+    debug_info("Greeted user", ctx.author.id)
+
+@bot.command()
+async def dabs(ctx):
+    """Check your total dabs"""
+    with open("count.json", "r") as file:
+        count = json.load(file)
+    debug_info(count,ctx.author.name)
+    if ctx.author.name in count["dab"]:
+        await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
+    else:
+        await ctx.send("Congratulations, you have never dabbed")
 
 async def rand(ctx, bounds):
-    for index in range(len(bounds)-1):
-        result = random.randint(bounds[index],bounds[index+1])
+    for index in range(len(bounds) - 1):
+        result = random.randint(bounds[index], bounds[index + 1])
         await ctx.send("Random number between " + str(bounds[index]) + " and "
-                       + str(bounds[index+1]) + ": "+str(result))
+                       + str(bounds[index + 1]) + ": " + str(result))
 
-@bot.command(name="rand",description="Generates a random number between numbers provided, inclusive")
+
+@bot.command(name="rand", description="Generates a random number between numbers provided, inclusive")
 async def _rand(ctx, *bounds: int):
     '''Generates a random number'''
     await rand(ctx, bounds)
 
+
 @bot.command(description="Generates random numbers, the first argument is amount of repetetions")
 async def mrand(ctx, *bounds: int):
     '''Generates multiple random numbers'''
-    debug_info("Mrand Function activated with  context {0}".format(ctx))
-    for i in range(bounds[0]):
-        await rand(ctx, bounds[1:])
+    if await check_bans(ctx):
+        debug_info("Mrand Function activated with  context {0}".format(ctx))
+        for i in range(bounds[0]):
+            await rand(ctx, bounds[1:])
+
 
 @_rand.error
-async def rand_handler(ctx,error):
-    if isinstance(error,discord.ext.commands.BadArgument):
+async def rand_handler(ctx, error):
+    if isinstance(error, discord.ext.commands.BadArgument):
         await ctx.send("Please use whole numbers")
     else:
         print("Unexpected error: ")
         print(error)
 
+
 @bot.command(description="Returns yes or no")
 async def eight(ctx):
     '''Shakes a magic eight ball'''
-    if random.randint(1,2) == 2:
-        await ctx.send("yes")
-    else:
-        await ctx.send("no")
+    # Store options for response in tuple
+    options = ("yes","no","absolutely","maybe","hardly","sure","never")
+    # Respond with random option using .choice
+    await ctx.send(random.choice(options))
 
-@bot.group(pass_context = True,description="follow with a specific meme")
+
+@bot.group(pass_context=True, description="follow with a specific meme")
 async def meme(ctx):
     if ctx.invoked_subcommand is None:
         await ctx.send("Specify a meme")
+
 
 @meme.command(description="dot dab")
 async def dab(ctx):
     await ctx.send(file=discord.File("dab.jpg"))
 
+
 @meme.command(description="doge")
 async def angery(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/32440271559"+
-                  "5767809/353676898892775424/angerydoge.jpg")
+    await ctx.send("https://cdn.discordapp.com/attachments/32440271559" +
+                   "5767809/353676898892775424/angerydoge.jpg")
+
 
 @meme.command(description="laser")
 async def notyet(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/32440271559"+
-                  "5767809/353676953800278016/NotYet.png")
+    await ctx.send("https://cdn.discordapp.com/attachments/32440271559" +
+                   "5767809/353676953800278016/NotYet.png")
+
 
 @meme.command(description="yoda")
 async def seagulls(ctx):
     await ctx.send("https://www.youtube.com/watch?v=U9t-slLl30E")
 
+
 @meme.command(description="sun")
 async def angeryr(ctx):
     await ctx.send("https://www.shitpostbot.com/img/sourceimages/angry-doog-angery-57b3a3af935ed.jpeg")
 
+
 @meme.command(description="glasses")
 async def putin(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/185587784218574848/381346915498983435/Funny-Russia-Meme-20.png")
+    await ctx.send(
+        "https://cdn.discordapp.com/attachments/185587784218574848/381346915498983435/Funny-Russia-Meme-20.png")
+
 
 @meme.command(description="james")
 async def triger(ctx):
     await ctx.send("https://cdn.discordapp.com/attachments/185587784218574848/381347025561714690/trgdd_james.png")
 
+@meme.command()
+async def crusade(ctx):
+    await ctx.send("https://cdn.discordapp.com/attachments/271124181372895242/463186200618860546/Z.png")
+
 @bot.command(description="o o o")
 async def echo(ctx, amount: int, *, message: str):
-    for i in range(amount):
-        await ctx.send(message)
+    """o o o"""
+    if await check_bans(ctx):
+        for i in range(amount):
+            await ctx.send(message)
+
 
 @echo.error
-async def echo_handler(ctx,error):
-    if isinstance(error,discord.ext.commands.BadArgument):
+async def echo_handler(ctx, error):
+    if isinstance(error, discord.ext.commands.BadArgument):
         await ctx.send("Please use whole numbers")
     else:
         print("Unexpected error: ")
         print(error)
 
-#RPG of SriteBot
-@bot.group(pass_context = True, description = "Header for RPG related commands")
+
+@bot.command(description = "The best music")
+async def crabrave(ctx):
+    """Queues crab rave through fred boat"""
+    await ctx.send("play https://soundcloud.com/monstercat/noisestorm-crab-rave")
+
+
+# RPG of SriteBot
+@bot.group(pass_context=True, description="Header for RPG related commands")
 async def rpg(ctx):
     if ctx.invoked_subcommand is None:
         await ctx.send("Specify a rpg command")
-        
+
+
 @rpg.command()
 async def setup(ctx):
-    debug_info(ctx.author.id,ctx.author.name)
+    debug_info(ctx.author.id, ctx.author.name)
     Path("UserData/{}".format(ctx.author.id)).mkdir(parents=True, exist_ok=True)
-    with open("UserData/{}/Info.json".format(ctx.author.id),"w") as file:
-        json.dump({"id":ctx.author.id,"name":ctx.author.name},file)
+    with open("UserData/{}/Info.json".format(ctx.author.id), "w") as file:
+        json.dump({"id": ctx.author.id, "name": ctx.author.name}, file)
     #with open("UserData/{}/Stats.json".format(ctx.author.id),"w") as file:
-        #json.dump({"strength":5,"agility":5,"magic":5,"tech":5,"coin":10},file)
+    #json.dump({"strength":5,"agility":5,"magic":5,"tech":5,"coin":10},file)
     await ctx.send("You get memed")
 
+
+@bot.command()
+async def maze(ctx, size: int):
+    if size <= 30:
+        maze = Maze.MazeGenerator(size).generateMap()
+        maze[size - 1][size//2].borders["bottom"] = False
+        string = Maze.drawMap(maze)
+        string = string[:size + 1*(size % 2  == 0)] + " " + string[size + 1 + 1*(size % 2  == 0):]
+        await ctx.send("```"+string+"```")
+    else:
+        await ctx.send("Max maze size is 30")
+
+@maze.error
+async def maze_handler(ctx, error):
+    if isinstance(error, discord.ext.commands.BadArgument):
+        await ctx.send("Please use whole numbers")
+    else:
+        print("Unexpected error: ")
+        print(error)
+
+@bot.command()
+async def surprise(ctx, delay: int, *, message: str):
+    '''Echos the message after delay seconds'''
+    debug_info("Surprise message",message)
+    await asyncio.sleep(delay)
+    await ctx.send(message)
+
+@surprise.error
+async def surprise_handler(ctx, error):
+    if isinstance(error, discord.ext.commands.BadArgument):
+        await ctx.send("Please use whole numbers")
+    else:
+        print("Unexpected error: ")
+        print(error)
+
+@bot.command()
+async def ban(ctx, member: discord.Member):
+    """Adds a discord member to the ban list"""
+    # Only do the banning if HN67 calls the command
+    if ctx.author.id == 185944398217871360:       
+        # Load the current ban file
+        with open("banned.json", "r") as file:
+            bans = json.load(file)
+        # Update new ban
+        bans[member.id] = True
+        # Save ban file
+        with open("banned.json".format(ctx.author.id), "w") as file:
+            json.dump(bans, file)
+        # Show debug info
+        debug_info("Banned {}".format(member) )      
+    else:
+        await ctx.send("Sorry, you cant do that")
+
+@bot.command()
+async def fact(ctx):
+    """Displays a random calendar fact"""
+    await ctx.send(AltChain.xkcd.value())
+
+@bot.command()
+async def spam(ctx, length: int):
+    """Displays a paragraph from the spam module"""
+    await ctx.send(Spam.paragraph(length))
+
+@spam.error
+async def spam_handler(ctx, error):
+    if isinstance(error, discord.ext.commands.BadArgument):
+        await ctx.send("Please use whole numbers")
+    else:
+        print("Unexpected error: ")
+        print(error)
+
+# Time command respone expectations table
+timeWait = {}
+
+@bot.command(name="time")
+async def _time(ctx):
+    """Say 'stop' after running command to time yourself"""
+    # Saves current time (according to this)
+    current = time.time()
+    debug_info(ctx.channel.id, ctx.author.id)
+    timeWait[(ctx.channel.id, ctx.author.id)] = current
+    await asyncio.sleep(5)
+    if (ctx.channel.id, ctx.author.id) in timeWait:
+        timeWait.pop((ctx.channel.id, ctx.author.id))
+        await ctx.send("Timeout at 5 seconds")
+
+async def time_response(message):
+    # Save old time
+    oldTime = timeWait[(message.channel.id, message.author.id)]
+    # Remove tracker
+    timeWait.pop((message.channel.id, message.author.id))
+    # Check new time
+    newTime = time.time()
+    # Calculate and output change
+    change = round(newTime - oldTime, 1)
+    await message.channel.send("Replied in {0} seconds".format(change))
+
+# Tick Interval for timer command
+interval = 1
+
+@bot.command()
+async def timer(ctx, duration: int):
+    """Displays a counting down timer"""
+    # Time remaining
+    left = duration
+    # Create message
+    message = await ctx.send("```Timer: {0}```".format(left))
+    # Tick down through qued remaining time, editing message
+    while left > 0:
+        await message.edit(content = "```Timer: {0}```".format(left))
+        left -= interval
+        await asyncio.sleep(interval)
+    # Finish the timer message
+    await message.edit(content = "```Timer: Done```")
+    # Mention original command author
+    await ctx.send("Timer Finished {0}".format(ctx.author.mention))
+
+
+@bot.command()
+async def console(ctx):
+    """Opens the console to input, only available to HN67"""
+    # Only open console if HN67 calls
+    if ctx.author.id == 185944398217871360:
+        await ctx.message.delete()
+        temp = input("Request for console input: ")
+        await ctx.send(temp)
+    
 bot.run(SriteBotInfo.bot_id)
