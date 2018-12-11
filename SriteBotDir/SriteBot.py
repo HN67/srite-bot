@@ -22,9 +22,7 @@ import time
 import json
 
 # Import custom HN67 scripts
-import Maze
-import AltChain
-import Spam
+from scripts import *
 
 # Import config file
 import config
@@ -33,7 +31,7 @@ import config
 import SriteBotInfo
 
 # Set cwd so that bot can be run from anywhere and still functions correctly
-os.chdir(SriteBotInfo.directory)
+os.chdir(os.path.dirname(__file__))
 
 # Debug method
 def debug_info(*messages):
@@ -140,7 +138,10 @@ async def count_dabs(message, text, author, channel):
                                                  + "and is used to test a variety of things on backend")
 async def hello(ctx):
     '''Replies with simple text'''
-    await ctx.send("Hi " + ctx.author.nick)
+    try:
+        await ctx.send("Hi " + ctx.author.nick)
+    except TypeError:
+        await ctx.send("Hi " + ctx.author.name)
     debug_info("Greeted user", ctx.author.id)
 
 @bot.command()
@@ -202,7 +203,7 @@ async def meme(ctx):
 
 @meme.command(description="dot dab")
 async def dab(ctx):
-    await ctx.send(file=discord.File("dab.jpg"))
+    await ctx.send(file=discord.File("resource/dab.jpg"))
 
 
 @meme.command(description="doge")
@@ -269,11 +270,15 @@ async def crabrave(ctx):
 @bot.group(pass_context=True, description="Header for eco related commands",
            aliases = ["eco","e"])
 async def economy(ctx):
+
+    await eco_data_validate(ctx.author)
+    
     if ctx.invoked_subcommand is None:
         await ctx.send("Specify a economy command")
 
 
-@economy.command()
+#@economy.command()
+'''
 async def setup(ctx, flag: str = None):
     # Debug print who caled it to track commands
     debug_info(ctx.author.id, ctx.author.name)
@@ -325,9 +330,10 @@ async def setup(ctx, flag: str = None):
                 
         # Send feedback so user knows command was sucsessful
         await ctx.send("Setup for {} complete".format(ctx.author.mention))
+'''
 
 # Validation of user data function
-async def data_validate(member: discord.Member):
+async def eco_data_validate(member: discord.Member):
 
     # Check that path exists
     if Path("UserData/{}".format(member.id)).is_dir():
@@ -366,6 +372,22 @@ async def data_validate(member: discord.Member):
     with open("UserData/{}/Economy.json".format(member.id), "w") as file:
         json.dump(economy, file)
 
+# Makes sure the guild is equipped to deal with economy (e.g. emoji)
+async def sriteEmoji(guild: discord.Guild):
+
+    for e in guild.emojis:
+        if e.name == "sritecoin":
+            return e
+
+    else:
+        try:
+            with open("resources/sritecoin.png", "rb") as i:
+                emoji = await guild.create_custom_emoji(name="sritecoin",
+                                                        image = i.read())
+            return emoji
+        except discord.errors.Forbidden: 
+            return "SC (No emoji perms)"
+            
         
 @economy.command()
 async def tax(ctx):
@@ -393,7 +415,7 @@ async def tax(ctx):
             json.dump(data, file)
 
         # Send confirmation to show sucsess
-        await ctx.send("Collected tax of {} SC".format(config.economy.taxAmount))
+        await ctx.send("Collected tax of {} :sritecoin:".format(config.economy.taxAmount))
 
     else:
         # Show error message that will tell user how long they need to wait
@@ -407,19 +429,24 @@ async def money(ctx, member: discord.Member = None):
 
     # Choose user to allow varied command use
     if member == None:
-        user = ctx.author.id
+        user = ctx.author
     else:
-        user = member.id
+        user = member
 
     # Save path for cleaner code
-    ecoFile = "UserData/{}/Economy.json".format(user)
+    ecoFile = "UserData/{}/Economy.json".format(user.id)
 
     # Get data
     with open(ecoFile, "r") as file:
         data = json.load(file)
 
+    # Debug info
+    debug_info(ctx.author.name, ctx.guild, await sriteEmoji(ctx.guild))
+
     # Send message on money amount
-    await ctx.send("```Srite Coin: {}```".format(data["money"]))
+    await ctx.send("{0} {2} {1}".format(
+        user.mention, data["money"], await sriteEmoji(ctx.guild)))
+
         
 @economy.command()
 async def give(ctx, member: discord.Member, amount: int):
@@ -465,7 +492,7 @@ async def surprise_handler(ctx, error):
         print("Unexpected error: ")
         print(error)
 
-@bot.command()
+@bot.command(hidden = True)
 async def ban(ctx, member: discord.Member):
     """Adds a discord member to the ban list"""
     # Only do the banning if HN67 calls the command
@@ -548,7 +575,7 @@ async def timer(ctx, duration: int):
     await ctx.send("Timer Finished {0}".format(ctx.author.mention))
 
 
-@bot.command()
+@bot.command(hidden = True)
 async def console(ctx):
     """Opens the console to input, only available to HN67"""
     # Only open console if HN67 calls
