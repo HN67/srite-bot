@@ -16,7 +16,7 @@ from pathlib import Path
 import random
 import re
 import threading
-from datetime import datetime
+import datetime
 import time
 
 import json
@@ -25,6 +25,9 @@ import json
 import Maze
 import AltChain
 import Spam
+
+# Import config file
+import config
 
 # Import sensitive bot info
 import SriteBotInfo
@@ -258,26 +261,175 @@ async def echo_handler(ctx, error):
 @bot.command(description = "The best music")
 async def crabrave(ctx):
     """Queues crab rave through fred boat"""
-    await ctx.send("play https://soundcloud.com/monstercat/noisestorm-crab-rave")
+    # Uses the syntax of another bot called Fred Boat to play a song
+    await ctx.send(";;play https://soundcloud.com/monstercat/noisestorm-crab-rave")
 
 
-# RPG of SriteBot
-@bot.group(pass_context=True, description="Header for RPG related commands")
-async def rpg(ctx):
+# Economy of SriteBot
+@bot.group(pass_context=True, description="Header for eco related commands",
+           aliases = ["eco","e"])
+async def economy(ctx):
     if ctx.invoked_subcommand is None:
-        await ctx.send("Specify a rpg command")
+        await ctx.send("Specify a economy command")
 
 
-@rpg.command()
-async def setup(ctx):
+@economy.command()
+async def setup(ctx, flag: str = None):
+    # Debug print who caled it to track commands
     debug_info(ctx.author.id, ctx.author.name)
+
+    # Set valid flags for code use
+    flags = [None, "reset"]
+    
+    # Make sure flag is recognizable to show informative error messages
+    if not flag in flags:
+
+        await ctx.send("Flag '{}' not recognized".format(flag))
+        await ctx.send("Valid flags are: {}".format(flags[1:]))
+
+        return
+        
+    # Ensure the users path exists to prevent errors
     Path("UserData/{}".format(ctx.author.id)).mkdir(parents=True, exist_ok=True)
+    # Save directory path to clean code
+    userDir = "UserData/{}/".format(ctx.author.id)
+    # Use with syntax to decrease corruption chance
+    # Create/update user info file (for manual data lookup)
     with open("UserData/{}/Info.json".format(ctx.author.id), "w") as file:
         json.dump({"id": ctx.author.id, "name": ctx.author.name}, file)
-    #with open("UserData/{}/Stats.json".format(ctx.author.id),"w") as file:
-    #json.dump({"strength":5,"agility":5,"magic":5,"tech":5,"coin":10},file)
-    await ctx.send("You get memed")
+    # Check that eco doesnt already exist so that the users progress isnt reset
+    try:
+        with open(userDir+"Economy.json", "r") as file:
+            pass
+        
+        if flag == "reset":
+            pass
 
+        else:
+            # Send feedback that setup has already been done
+            await ctx.send("Setup has already been performed, "+
+                           "use 's:economy setup reset' to reset")
+
+            # End function
+            return
+        
+    except FileNotFoundError:
+        pass
+        
+    # Zero vars to reset users progress
+    # Sets taxData to 2000 to allow instant taxations
+    with open(userDir+"Economy.json", "w") as file:
+        json.dump({"money": 0, "invested": 0,
+                   "taxTime": 0}, file)
+
+                
+        # Send feedback so user knows command was sucsessful
+        await ctx.send("Setup for {} complete".format(ctx.author.mention))
+
+# Validation of user data function
+async def data_validate(member: discord.Member):
+
+    # Check that path exists
+    if Path("UserData/{}".format(member.id)).is_dir():
+
+        pass
+
+    else:
+
+        # Create Path
+        Path("UserData/{}".format(member.id)).mkdir(parents=True, exist_ok=True)
+
+    # Update info file
+    with open("UserData/{}/Info.json".format(member.id), "w") as file:
+        json.dump({"id": member.id, "name": member.name}, file)
+
+    # Check state of Economy file
+    try:
+        with open("UserData/{}/Economy.json".format(member.id), "r") as file:
+            economy = json.load(file)
+
+    # Clause activates if file does not exist
+    except FileNotFoundError:
+        
+        # Create valid economy file since it doesnt exist
+        economy = {"money": 0, "invested": 0, "taxTime": 0}
+
+    # Clause activates if the file exists
+    else:
+        # Check Economy file data
+        # Add any missing keys
+        for key in ["money", "invested", "taxTime"]:
+            if key not in economy:
+                economy[key] = 0
+
+    # Update economy data
+    with open("UserData/{}/Economy.json".format(member.id), "w") as file:
+        json.dump(economy, file)
+
+        
+@economy.command()
+async def tax(ctx):
+
+    # Save file path to clean code
+    ecoFile = "UserData/{}/Economy.json".format(ctx.author.id)
+
+    # Check last acsessed time to see if it was less than an hour ago
+    with open(ecoFile, "r") as file:
+        data = json.load(file)
+
+    debug_info(data)
+    current = time.time()
+    diff = datetime.timedelta(seconds = (current - data["taxTime"]))
+    # Check if last tax was an hour ago to determine whether it is to soon
+    if diff.seconds >= config.economy.taxTime:
+        # Add money to user bank
+        data["money"] += config.economy.taxAmount
+
+        # Save current time
+        data["taxTime"] = current
+        
+        # Resave data
+        with open(ecoFile, "w") as file:
+            json.dump(data, file)
+
+        # Send confirmation to show sucsess
+        await ctx.send("Collected tax of {} SC".format(config.economy.taxAmount))
+
+    else:
+        # Show error message that will tell user how long they need to wait
+        hour = datetime.timedelta(seconds = config.economy.taxTime)
+        rem = hour - diff
+        # Send message
+        await ctx.send("```{} remaining before you can tax again```".format(str(rem)))
+
+@economy.command()
+async def money(ctx, member: discord.Member = None):
+
+    # Choose user to allow varied command use
+    if member == None:
+        user = ctx.author.id
+    else:
+        user = member.id
+
+    # Save path for cleaner code
+    ecoFile = "UserData/{}/Economy.json".format(user)
+
+    # Get data
+    with open(ecoFile, "r") as file:
+        data = json.load(file)
+
+    # Send message on money amount
+    await ctx.send("```Srite Coin: {}```".format(data["money"]))
+        
+@economy.command()
+async def give(ctx, member: discord.Member, amount: int):
+
+    # Pull sender date for later use
+    with open("UserData/{}/Economy.json".format(ctx.author.id)) as file:
+        data = json.load(file)
+
+    # Transfer funds if available
+    
 
 @bot.command()
 async def maze(ctx, size: int):
