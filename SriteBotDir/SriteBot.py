@@ -402,8 +402,10 @@ async def tax(ctx):
     debug_info(data)
     current = time.time()
     diff = datetime.timedelta(seconds = (current - data["taxTime"]))
+    debug_info(current, data["taxTime"], diff, diff.seconds)
     # Check if last tax was an hour ago to determine whether it is to soon
-    if diff.seconds >= config.economy.taxTime:
+    if (diff.days*86400 + diff.seconds) >= config.economy.taxTime:
+        
         # Add money to user bank
         data["money"] += config.economy.taxAmount
 
@@ -415,16 +417,18 @@ async def tax(ctx):
             json.dump(data, file)
 
         # Send confirmation to show sucsess
-        await ctx.send("Collected tax of {} :sritecoin:".format(config.economy.taxAmount))
+        await ctx.send("Collected tax of {0} {1}".format(
+                        config.economy.taxAmount, await sriteEmoji(ctx.guild)))
 
     else:
         # Show error message that will tell user how long they need to wait
-        hour = datetime.timedelta(seconds = config.economy.taxTime)
-        rem = hour - diff
+        cooldown = datetime.timedelta(seconds = config.economy.taxTime)
+        rem = cooldown - diff
         # Send message
-        await ctx.send("```{} remaining before you can tax again```".format(str(rem)))
+        await ctx.send("```{} remaining before you can tax again```".format(
+                        str(rem)))
 
-@economy.command()
+@economy.command(aliases = ["m", "$"])
 async def money(ctx, member: discord.Member = None):
 
     # Choose user to allow varied command use
@@ -444,8 +448,11 @@ async def money(ctx, member: discord.Member = None):
     debug_info(ctx.author.name, ctx.guild, await sriteEmoji(ctx.guild))
 
     # Send message on money amount
-    await ctx.send("{0} {2} {1}".format(
-        user.mention, data["money"], await sriteEmoji(ctx.guild)))
+    # Create embed
+    embed = discord.Embed(title = "\uFEFF")
+    embed.add_field(name="\uFEFF", value = "{0} has {1} {2}".format(
+            user.display_name, data["money"], await sriteEmoji(ctx.guild)))
+    await ctx.send(embed = embed)
 
         
 @economy.command()
