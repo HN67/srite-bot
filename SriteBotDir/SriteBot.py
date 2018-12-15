@@ -450,7 +450,7 @@ async def money(ctx, member: discord.Member = None):
 
     # Send message on money amount
     # Create embed
-    embed = discord.Embed(color = 0x00A229,
+    embed = discord.Embed(color = 0x016681, #00A229
                           description = "{0} has {1} {2}".format(
                                         user.display_name,
                                         data["money"],
