@@ -134,6 +134,10 @@ async def count_dabs(message, text, author, channel):
         await channel.send("Jesus, {} Dabs!".format(count["dab"]["total"]//1000*1000))
 
 
+# Returns an embed wrapping the text
+def srite_msg(value: str):
+
+    return discord.Embed(color = 0x00A229, description = value)
 
 @bot.command(short="Greets the bot", description="Gets the bot to reply with Hello,"
                                                  + "and is used to test a variety of things on backend")
@@ -278,61 +282,6 @@ async def economy(ctx):
         await ctx.send("Specify a economy command")
 
 
-#@economy.command()
-'''
-async def setup(ctx, flag: str = None):
-    # Debug print who caled it to track commands
-    debug_info(ctx.author.id, ctx.author.name)
-
-    # Set valid flags for code use
-    flags = [None, "reset"]
-    
-    # Make sure flag is recognizable to show informative error messages
-    if not flag in flags:
-
-        await ctx.send("Flag '{}' not recognized".format(flag))
-        await ctx.send("Valid flags are: {}".format(flags[1:]))
-
-        return
-        
-    # Ensure the users path exists to prevent errors
-    Path("UserData/{}".format(ctx.author.id)).mkdir(parents=True, exist_ok=True)
-    # Save directory path to clean code
-    userDir = "UserData/{}/".format(ctx.author.id)
-    # Use with syntax to decrease corruption chance
-    # Create/update user info file (for manual data lookup)
-    with open("UserData/{}/Info.json".format(ctx.author.id), "w") as file:
-        json.dump({"id": ctx.author.id, "name": ctx.author.name}, file)
-    # Check that eco doesnt already exist so that the users progress isnt reset
-    try:
-        with open(userDir+"Economy.json", "r") as file:
-            pass
-        
-        if flag == "reset":
-            pass
-
-        else:
-            # Send feedback that setup has already been done
-            await ctx.send("Setup has already been performed, "+
-                           "use 's:economy setup reset' to reset")
-
-            # End function
-            return
-        
-    except FileNotFoundError:
-        pass
-        
-    # Zero vars to reset users progress
-    # Sets taxData to 2000 to allow instant taxations
-    with open(userDir+"Economy.json", "w") as file:
-        json.dump({"money": 0, "invested": 0,
-                   "taxTime": 0}, file)
-
-                
-        # Send feedback so user knows command was sucsessful
-        await ctx.send("Setup for {} complete".format(ctx.author.mention))
-'''
-
 # Validation of user data function
 async def eco_data_validate(member: discord.Member):
 
@@ -418,16 +367,17 @@ async def tax(ctx):
             json.dump(data, file)
 
         # Send confirmation to show sucsess
-        await ctx.send("Collected tax of {0} {1}".format(
-                        config.economy.taxAmount, await sriteEmoji(ctx.guild)))
+        await ctx.send(embed = srite_msg("Collected tax of {0} {1}".format(
+                        config.economy.taxAmount, await sriteEmoji(ctx.guild))))
 
     else:
         # Show error message that will tell user how long they need to wait
         cooldown = datetime.timedelta(seconds = config.economy.taxTime)
         rem = cooldown - diff
         # Send message
-        await ctx.send("```{} remaining before you can tax again```".format(
-                        str(rem)))
+        await ctx.send(embed = srite_msg(
+                        "{} remaining before you can tax again".format(
+                        str(rem))))
 
 @economy.command(aliases = ["m", "$"])
 async def money(ctx, member: discord.Member = None):
@@ -466,8 +416,38 @@ async def give(ctx, member: discord.Member, amount: int):
     with open("UserData/{}/Economy.json".format(ctx.author.id)) as file:
         data = json.load(file)
 
-    # Transfer funds if available
-    
+    # Get data of receiver
+    with open("UserData/{}/Economy.json".format(member.id)) as file:
+        other = json.load(file)
+
+    # Check if funds are available
+    if data["money"] >= amount:
+
+        # Add money to other and remove from self
+        other["money"] += amount
+        data["money"] -= amount
+
+        # Send confirmation message
+        await ctx.send(embed=srite_msg("{0} sent {2} {3} to {1}".format(
+                                  ctx.author.display_name,
+                                  member.display_name,
+                                  amount,
+                                  await sriteEmoji(ctx.guild),)
+                                 ))
+
+        debug_info(data, other)
+        # Resave data
+        with open("UserData/{}/Economy.json".format(ctx.author.id), "w") as file:
+            json.dump(data, file)
+
+        with open("UserData/{}/Economy.json".format(member.id), "w") as file:
+            json.dump(other, file)
+
+    else:
+
+        # Send error message to say there are not enough money
+        await ctx.send(embed=srite_msg("Not enough {}".format(
+                                    await sriteEmoji(ctx.guild))))
 
 @bot.command()
 async def maze(ctx, size: int):
