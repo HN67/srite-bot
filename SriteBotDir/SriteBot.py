@@ -450,9 +450,12 @@ async def money(ctx, member: discord.Member = None):
 
     # Send message on money amount
     # Create embed
-    embed = discord.Embed(title = "\uFEFF")
-    embed.add_field(name="\uFEFF", value = "{0} has {1} {2}".format(
-            user.display_name, data["money"], await sriteEmoji(ctx.guild)))
+    embed = discord.Embed(color = 0x00A229,
+                          description = "{0} has {1} {2}".format(
+                                        user.display_name,
+                                        data["money"],
+                                        await sriteEmoji(ctx.guild)))
+    # Send message with embed
     await ctx.send(embed = embed)
 
         
