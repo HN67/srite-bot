@@ -9,3 +9,12 @@ class economy:
 class bot:
 
     color = 0x00A229
+
+class stocks:
+
+    items = ["srite", "pog"]
+
+    standard = 100
+    change = 1
+
+    updateFrequency = 300

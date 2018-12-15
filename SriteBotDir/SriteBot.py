@@ -491,6 +491,66 @@ async def hash(ctx):
 
     debug_info("Out of hash loop",len(display_string))
 
+
+async def track_stocks():
+    """Background task for tracking bot stocks"""
+
+    # Run continuosly during bot operation
+    while not client.is_closed():
+        # Update stocks every so often
+        update_stocks()
+        asyncio.sleep(config.stocks.updateFrequency)
+
+def update_stocks():
+    """Updates the stocks"""
+
+    # Ensure that all stocks have been initialized
+    validate_stocks()
+
+    # Load stocks
+    with open("UserData/stocks.json", "r") as file:
+        stocks = json.load(file)
+
+    # Update stocks
+    for stock in stocks:
+
+        stocks[stock] += random.randint(-1, 1) * config.stocks.change
+
+    # Resave stocks
+    with open("UserData/stocks.json", "w") as file:
+        json.dump(file)
+
+def validate_stocks():
+    """Validates the stocks file"""
+
+    stocks = config.stocks.items
+
+    # Make sure stock file exists
+    try:
+
+        with open("UserData/stocks.json", "r") as file:
+
+            # Load it if it does exist
+            data = json.load(file)
+
+    except FileNotFoundError:
+
+        # Create stock file
+        data = {k: config.stocks.standard for k in stocks}
+
+    else:
+
+        # Check each stock and create it if it does not exist
+        for stock in stocks:
+            if stock not in data:
+                data[stock] = config.stocks.standard
+
+        # Resave stocks
+        with open("UserData/stocks.json", "w") as file:
+            json.dump(data, file)
+
+        
+
 @bot.command()
 async def maze(ctx, size: int):
     if size <= 30:
