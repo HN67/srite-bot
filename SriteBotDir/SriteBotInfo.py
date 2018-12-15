@@ -1,1 +1,0 @@
-bot_id = "TOKEN"
