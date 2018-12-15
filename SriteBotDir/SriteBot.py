@@ -55,7 +55,8 @@ async def check_bans(ctx):
         return True
 
 # Initialize bot
-bot = commands.Bot(command_prefix="s.", description="General bot created by HN67")
+bot = commands.Bot(command_prefix=("s.","s:"),
+                   description="General bot created by HN67")
 
 @bot.event
 async def on_ready():
@@ -63,7 +64,7 @@ async def on_ready():
                bot.user.name,
                bot.user.id)
     await bot.change_presence(game=discord.Game(
-                              name=(bot.command_prefix + "help")))
+                              name=(bot.command_prefix[0] + "help")))
     debug_info("Finished setup")
 
 
