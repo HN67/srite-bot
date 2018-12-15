@@ -486,7 +486,6 @@ async def hash(ctx):
         with open(f"UserData/{msg.author.id}/Economy.json", "w") as file:
             json.dump(data, file)
 
-        print(dir(msg))
         # Delete messages
         await msg.delete()
 
