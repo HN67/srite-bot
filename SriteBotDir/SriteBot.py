@@ -428,53 +428,69 @@ async def give(ctx, member: discord.Member, amount: int):
         await ctx.send(embed=srite_msg("Not enough {}".format(
                                     await sriteEmoji(ctx.guild))))
 
-@economy.command(aliases = ["c"],
-                 description = "Collect the hash in 10 secs")
-async def collect(ctx, difficulty: int):
+@economy.command(aliases = ["h"])
+async def hash(ctx):
 
     # Create string of numbers for user to reply
     string = []
-    for i in range(difficulty):
-        string.append(str(random.randint(0, 9)))
+    for i in range(1000):
+        string.append(random.randint(0, 9))
 
     # Condense string
-    string = "".join(string)
-    
-    # Display string
-    await ctx.send(embed = srite_msg(f"Hash: {string}"))
+    display_string = "".join((str(i) for i in string))
 
+    # Save incremented string
+    inc_string = "".join((str(i+1) if i < 9 else "0" for i in string))
+
+    # Display string
+    embed = discord.Embed(color = config.bot.color,
+                          title = "Hash",
+                          description = display_string)
+    embed.add_field(name = "Last Harvest", value = "None")
+    display = await ctx.send(embed = embed)
+    
     # Define the predicate
     def check(msg):
-        return msg.content == string and msg.channel == ctx.channel
+        return (inc_string.startswith(msg.content)
+            and msg.channel == ctx.channel)
 
-    try:
+    # While the hash still exists
+    while len(display_string) > 0:
+
+        debug_info("In hash loop",len(display_string))
+        
         # Wait for reply
-        msg = await bot.wait_for("message", check = check,
-                                 timeout = config.economy.collectTime)
+        msg = await bot.wait_for("message", check = check)
 
-    # Timeout error
-    except asyncio.TimeoutError:
+        # Slice off strings
+        display_string = display_string[len(msg.content):]
+        inc_string = inc_string[len(msg.content):]
 
-        # Send message that the hash dissapeared
-        await ctx.send(embed = srite_msg("The hash dissapeared"))
+        # Update display string
+        emoji = await sriteEmoji(msg.guild)
+        embed.description = display_string
+        embed.set_field_at(0, name = "Last Harvest",
+                           value = f"{msg.content} by {msg.author.display_name} for {len(msg.content)} {emoji}")
 
-    else:
+        await display.edit(embed = embed)
+        
+        # Validate author
+        await eco_data_validate(msg.author)
+        
         # Increase collector money
         with open(f"UserData/{msg.author.id}/Economy.json", "r") as file:
             data = json.load(file)
 
-        data["money"] += difficulty
+        data["money"] += len(msg.content)
 
         with open(f"UserData/{msg.author.id}/Economy.json", "w") as file:
             json.dump(data, file)
-        
-        # Send sucsess message
-        await ctx.send(
-        embed = srite_msg("{0} collected the hash with a value of {1} {2}".format(
-                          msg.author.display_name,
-                          difficulty,
-                          await sriteEmoji(msg.guild))))
 
+        print(dir(msg))
+        # Delete messages
+        await msg.delete()
+
+    debug_info("Out of hash loop",len(display_string))
 
 @bot.command()
 async def maze(ctx, size: int):
