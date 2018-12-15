@@ -54,9 +54,28 @@ async def check_bans(ctx):
     else:
         return True
 
+
+# Set the cogs which are to be initally loaded
+init_cogs = ["cogs.memes",]
+
+
 # Initialize bot
 bot = commands.Bot(command_prefix=("s.","s:"),
                    description="General bot created by HN67")
+
+
+# Actually load the cogs so that the commands can be used
+if __name__ == "__main__":
+
+    for extension in init_cogs:
+
+        try:
+            bot.load_extension(extension)
+        except Exception as e:
+            debug_info("Failed to load extension {}".format(extension))
+        else:
+            debug_info(f"Loaded extension {extension}")
+
 
 @bot.event
 async def on_ready():
@@ -138,7 +157,7 @@ async def count_dabs(message, text, author, channel):
 # Returns an embed wrapping the text
 def srite_msg(value: str):
 
-    return discord.Embed(color = 0x00A229, description = value)
+    return discord.Embed(color = config.bot.color, description = value)
 
 @bot.command(short="Greets the bot", description="Gets the bot to reply with Hello,"
                                                  + "and is used to test a variety of things on backend")
@@ -149,6 +168,10 @@ async def hello(ctx):
     except TypeError:
         await ctx.send("Hi " + ctx.author.name)
     debug_info("Greeted user", ctx.author.id)
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send(embed = srite_msg("pong"))
 
 @bot.command()
 async def dabs(ctx):
@@ -199,54 +222,6 @@ async def eight(ctx):
     options = ("yes","no","absolutely","maybe","hardly","sure","never")
     # Respond with random option using .choice
     await ctx.send(random.choice(options))
-
-
-@bot.group(pass_context=True, description="follow with a specific meme")
-async def meme(ctx):
-    if ctx.invoked_subcommand is None:
-        await ctx.send("Specify a meme")
-
-
-@meme.command(description="dot dab")
-async def dab(ctx):
-    await ctx.send(file=discord.File("resource/dab.jpg"))
-
-
-@meme.command(description="doge")
-async def angery(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/32440271559" +
-                   "5767809/353676898892775424/angerydoge.jpg")
-
-
-@meme.command(description="laser")
-async def notyet(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/32440271559" +
-                   "5767809/353676953800278016/NotYet.png")
-
-
-@meme.command(description="yoda")
-async def seagulls(ctx):
-    await ctx.send("https://www.youtube.com/watch?v=U9t-slLl30E")
-
-
-@meme.command(description="sun")
-async def angeryr(ctx):
-    await ctx.send("https://www.shitpostbot.com/img/sourceimages/angry-doog-angery-57b3a3af935ed.jpeg")
-
-
-@meme.command(description="glasses")
-async def putin(ctx):
-    await ctx.send(
-        "https://cdn.discordapp.com/attachments/185587784218574848/381346915498983435/Funny-Russia-Meme-20.png")
-
-
-@meme.command(description="james")
-async def triger(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/185587784218574848/381347025561714690/trgdd_james.png")
-
-@meme.command()
-async def crusade(ctx):
-    await ctx.send("https://cdn.discordapp.com/attachments/271124181372895242/463186200618860546/Z.png")
 
 @bot.command(description="o o o")
 async def echo(ctx, amount: int, *, message: str):
@@ -413,6 +388,9 @@ async def money(ctx, member: discord.Member = None):
 @economy.command()
 async def give(ctx, member: discord.Member, amount: int):
 
+    # Validate receiver
+    await eco_data_validate(member)
+
     # Pull sender date for later use
     with open("UserData/{}/Economy.json".format(ctx.author.id)) as file:
         data = json.load(file)
@@ -449,6 +427,54 @@ async def give(ctx, member: discord.Member, amount: int):
         # Send error message to say there are not enough money
         await ctx.send(embed=srite_msg("Not enough {}".format(
                                     await sriteEmoji(ctx.guild))))
+
+@economy.command(aliases = ["c"],
+                 description = "Collect the hash in 10 secs")
+async def collect(ctx, difficulty: int):
+
+    # Create string of numbers for user to reply
+    string = []
+    for i in range(difficulty):
+        string.append(str(random.randint(0, 9)))
+
+    # Condense string
+    string = "".join(string)
+    
+    # Display string
+    await ctx.send(embed = srite_msg(f"Hash: {string}"))
+
+    # Define the predicate
+    def check(msg):
+        return msg.content == string and msg.channel == ctx.channel
+
+    try:
+        # Wait for reply
+        msg = await bot.wait_for("message", check = check,
+                                 timeout = config.economy.collectTime)
+
+    # Timeout error
+    except asyncio.TimeoutError:
+
+        # Send message that the hash dissapeared
+        await ctx.send(embed = srite_msg("The hash dissapeared"))
+
+    else:
+        # Increase collector money
+        with open(f"UserData/{msg.author.id}/Economy.json", "r") as file:
+            data = json.load(file)
+
+        data["money"] += difficulty
+
+        with open(f"UserData/{msg.author.id}/Economy.json", "w") as file:
+            json.dump(data, file)
+        
+        # Send sucsess message
+        await ctx.send(
+        embed = srite_msg("{0} collected the hash with a value of {1} {2}".format(
+                          msg.author.display_name,
+                          difficulty,
+                          await sriteEmoji(msg.guild))))
+
 
 @bot.command()
 async def maze(ctx, size: int):
