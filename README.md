@@ -9,4 +9,4 @@ Type s.help to get a list of commands, Documentation may be poor.
 SriteBot is currently going under heavy development, there is no effort for backwards compatability, and data (such as the economy) has a chance of being reset.
 
 # self-hosting
-If you are self hosting, you need to change the bot_id in SriteBotDir\SriteBotInfo to your bot token.
+If you are self hosting, you need to create a file in SriteBotDir called SriteBotInfo.py and type "bot_id = TOKEN" in the first line, where TOKEN is your bot's token.
