@@ -6,15 +6,19 @@ class economy:
 
     collectTime = 10.0
 
+    attributes = ["money", "taxTime"]
+
 class bot:
 
     color = 0x00A229
 
 class stocks:
 
-    items = ["srite", "pog"]
+    items = ["SRITE", "POG"]
 
     standard = 100
-    change = 1
+    change = 5
+
+    tradeChange = 1
 
     updateFrequency = 300

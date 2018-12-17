@@ -79,11 +79,19 @@ if __name__ == "__main__":
 
 @bot.event
 async def on_ready():
+    # Print login information
     debug_info("Bot logged in as",
                bot.user.name,
                bot.user.id)
+
+    # Set activity to help command to give users somewhere to start
     await bot.change_presence(activity=discord.Game(
                               name=(bot.command_prefix[0] + "help")))
+
+    # Track stocks
+    bot.loop.create_task(track_stocks())
+    
+    # Show that setup is finished (e.g. background tasks have started)
     debug_info("Finished setup")
 
 
@@ -284,15 +292,28 @@ async def eco_data_validate(member: discord.Member):
     except FileNotFoundError:
         
         # Create valid economy file since it doesnt exist
-        economy = {"money": 0, "invested": 0, "taxTime": 0}
+        economy = {k: 0 for k in config.economy.attributes}
+
+        # Create stocks tracker
+        economy["stocks"] = {k: 0 for k in config.stocks.items}
 
     # Clause activates if the file exists
     else:
         # Check Economy file data
         # Add any missing keys
-        for key in ["money", "invested", "taxTime"]:
+        for key in config.economy.attributes:
             if key not in economy:
                 economy[key] = 0
+
+        # Validate stock key
+        if not "stocks" in economy:
+            # Create stocks tracker
+            economy["stocks"] = {k: 0 for k in config.stocks.items}
+        else:
+            # Check each individual key
+            for key in config.stocks.items:
+                if key not in economy["stocks"]:
+                    economy["stocks"][key] = 0
 
     # Update economy data
     with open("UserData/{}/Economy.json".format(member.id), "w") as file:
@@ -452,7 +473,7 @@ async def hash(ctx):
     # Define the predicate
     def check(msg):
         return (inc_string.startswith(msg.content)
-            and msg.channel == ctx.channel)
+            and msg.channel == ctx.channel and msg.content != "")
 
     # While the hash still exists
     while len(display_string) > 0:
@@ -491,21 +512,214 @@ async def hash(ctx):
 
     debug_info("Out of hash loop",len(display_string))
 
+@bot.group(aliases = ["s"], description = "Buy and sell srite stocks")
+async def stocks(ctx):
+
+    # Validate authors economy since stocks are
+    # naturally tied to the economy
+    await eco_data_validate(ctx.author)
+
+    # Also validate stocks
+    await validate_stocks()
+    
+    if ctx.invoked_subcommand is None:
+        await ctx.send("Specify a stock command")
+
+
+@stocks.command(aliases = ["m"])
+async def market(ctx):
+    """View current value of stocks"""
+
+    # Create embed
+    embed = discord.Embed(color = config.bot.color, title = "Market")
+
+    # Load stocks
+    with open("UserData/stocks.json", "r") as file:
+        stocks = json.load(file)
+
+    # Add fields for each stock
+    for stock in stocks:
+        embed.add_field(name = stock, value = stocks[stock])
+
+    # Send ebed
+    await ctx.send(embed = embed)
+
+@stocks.command(aliases = ["p", "port", "stocks"])
+async def portfolio(ctx, member: discord.Member = None):
+    """View portfolio of user"""
+
+    # Check member to function on
+    if member is None:
+        member = ctx.author
+
+    # Load data
+    with open(f"UserData/{member.id}/Economy.json") as file:
+        data = json.load(file)
+
+    # Load stock values
+    with open("UserData/stocks.json") as file:
+        stocks = json.load(file)
+
+    # Create embed
+    embed = discord.Embed(color = config.bot.color,
+                          title = f"{member.display_name} stocks")
+
+    # Init total value var
+    totalValue = 0
+
+    # Iterate through all stocks
+    for stock, amount in data["stocks"].items():
+
+        # Only show if the user has some of the stock
+        if amount > 0:
+            # Calculate value
+            value = amount*stocks[stock]
+
+            # Add field
+            embed.add_field(name = stock,
+                            value = "{0} x ({1} {2}) = {3} {2}".format(
+                                amount, stocks[stock],
+                                await sriteEmoji(ctx.guild),
+                                value))
+
+            # Increase total value
+            totalValue += value
+
+    # Add total value field
+    embed.add_field(name = "Total Value", value = "{0} {1}".format(totalValue,
+                                                await sriteEmoji(ctx.guild)))
+
+    # Send message
+    await ctx.send(embed = embed)
+
+@stocks.command()
+async def buy(ctx, stock, amount: int):
+
+    # Load stocks
+    with open("UserData/stocks.json", "r") as file:
+        stocks = json.load(file)
+
+    # Load user economy
+    with open(f"UserData/{ctx.author.id}/Economy.json", "r") as file:
+        eco = json.load(file)
+
+    # Check if stock exists (case doesnt matter)
+    if stock.upper() in stocks:
+
+        # Upper stock
+        stock = stock.upper()
+        
+        # Calculate price of purchase
+        price = stocks[stock]*amount
+
+        # Check if user has enough money
+        if eco["money"] >= price:
+
+            # Decrease money
+            eco["money"] -= price
+
+            # Increase stocks
+            eco["stocks"][stock] += amount
+
+            # Resave data
+            with open(f"UserData/{ctx.author.id}/Economy.json", "w") as file:
+                json.dump(eco, file)
+
+            # Change stock price
+            stocks[stock] += config.stocks.tradeChange*amount
+
+            # Save stock data
+            with open("UserData/stocks.json", "w") as file:
+                json.dump(stocks, file)
+
+            # Send sucsess message
+            await ctx.send(embed = srite_msg("Bought {0} {1} for {2} {3}".format(
+                                              amount, stock, price,
+                                              await sriteEmoji(ctx.guild))))
+
+        else:
+            # Send error message
+            await ctx.send(embed = srite_msg("Sorry, you have {0} of {1} {2} {3}".format(
+                            eco["money"],
+                            price,
+                            await sriteEmoji(ctx.guild),
+                            "required for this purchase")))
+
+    else:
+        await ctx.send(embed = srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks"))
+
+
+@stocks.command()
+async def sell(ctx, stock, amount: int):
+
+    # Load stocks
+    with open("UserData/stocks.json", "r") as file:
+        stocks = json.load(file)
+
+    # Load user economy
+    with open(f"UserData/{ctx.author.id}/Economy.json", "r") as file:
+        eco = json.load(file)
+
+    # Check if stock exists (case doesnt matter)
+    if stock.upper() in stocks:
+
+        # Upper stock
+        stock = stock.upper()
+        
+        # Calculate price of sale
+        price = stocks[stock]*amount
+
+        # Check if user has enough stocks
+        if eco["stocks"][stock] >= amount:
+
+            # Decrease stocks
+            eco["stocks"][stock] -= amount
+
+            # Increase money
+            eco["money"] += price
+
+            # Resave data
+            with open(f"UserData/{ctx.author.id}/Economy.json", "w") as file:
+                json.dump(eco, file)
+
+            # Change stock price
+            stocks[stock] -= config.stocks.tradeChange*amount
+
+            # Save stock data
+            with open("UserData/stocks.json", "w") as file:
+                json.dump(stocks, file)
+
+            # Send sucsess message
+            await ctx.send(embed = srite_msg("Sold {0} {1} for {2} {3}".format(
+                                              amount, stock, price,
+                                              await sriteEmoji(ctx.guild))))
+        else:
+            # Send error message
+            await ctx.send(embed = srite_msg("Sorry, you have {0} of {1} {2}".format(
+                            eco["stocks"][stock],
+                            stock,
+                            "required for this sale")))
+
+    else:
+        await ctx.send(embed = srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks"))
+
+
 
 async def track_stocks():
     """Background task for tracking bot stocks"""
 
     # Run continuosly during bot operation
-    while not client.is_closed():
+    while not bot.is_closed():
         # Update stocks every so often
-        update_stocks()
-        asyncio.sleep(config.stocks.updateFrequency)
+        debug_info("Updating stocks")
+        await update_stocks()
+        await asyncio.sleep(config.stocks.updateFrequency)
 
-def update_stocks():
+async def update_stocks():
     """Updates the stocks"""
 
     # Ensure that all stocks have been initialized
-    validate_stocks()
+    await validate_stocks()
 
     # Load stocks
     with open("UserData/stocks.json", "r") as file:
@@ -518,9 +732,9 @@ def update_stocks():
 
     # Resave stocks
     with open("UserData/stocks.json", "w") as file:
-        json.dump(file)
+        json.dump(stocks, file)
 
-def validate_stocks():
+async def validate_stocks():
     """Validates the stocks file"""
 
     stocks = config.stocks.items
@@ -537,6 +751,7 @@ def validate_stocks():
 
         # Create stock file
         data = {k: config.stocks.standard for k in stocks}
+        debug_info("Created stocks file", data)
 
     else:
 
@@ -545,9 +760,9 @@ def validate_stocks():
             if stock not in data:
                 data[stock] = config.stocks.standard
 
-        # Resave stocks
-        with open("UserData/stocks.json", "w") as file:
-            json.dump(data, file)
+    # Resave stocks
+    with open("UserData/stocks.json", "w") as file:
+        json.dump(data, file)
 
         
 
