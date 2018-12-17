@@ -82,7 +82,7 @@ async def on_ready():
     debug_info("Bot logged in as",
                bot.user.name,
                bot.user.id)
-    await bot.change_presence(game=discord.Game(
+    await bot.change_presence(activity=discord.Game(
                               name=(bot.command_prefix[0] + "help")))
     debug_info("Finished setup")
 
