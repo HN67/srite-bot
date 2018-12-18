@@ -592,8 +592,8 @@ async def portfolio(ctx, member: discord.Member = None):
     # Send message
     await ctx.send(embed = embed)
 
-@stocks.command()
-async def buy(ctx, stock, amount: int):
+@stocks.command(aliases = ["b"])
+async def buy(ctx, stock, amount: int = 1):
 
     # Load stocks
     with open("UserData/stocks.json", "r") as file:
@@ -609,8 +609,8 @@ async def buy(ctx, stock, amount: int):
         # Upper stock
         stock = stock.upper()
         
-        # Calculate price of purchase
-        price = stocks[stock]*amount
+        # Calculate price of purchase (pre increase the price)
+        price = (stocks[stock]+config.stocks.tradeChange*amount)*amount
 
         # Check if user has enough money
         if eco["money"] >= price:
@@ -649,8 +649,8 @@ async def buy(ctx, stock, amount: int):
         await ctx.send(embed = srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks"))
 
 
-@stocks.command()
-async def sell(ctx, stock, amount: int):
+@stocks.command(aliases = ["s"])
+async def sell(ctx, stock, amount: int = 1):
 
     # Load stocks
     with open("UserData/stocks.json", "r") as file:
@@ -704,6 +704,11 @@ async def sell(ctx, stock, amount: int):
         await ctx.send(embed = srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks"))
 
 
+@stocks.command(hidden = True, aliases = ["u"])
+@commands.is_owner()
+async def update(ctx):
+    await update_stocks()
+    await ctx.send(embed = srite_msg("Updated Stocks"))
 
 async def track_stocks():
     """Background task for tracking bot stocks"""
@@ -728,7 +733,8 @@ async def update_stocks():
     # Update stocks
     for stock in stocks:
 
-        stocks[stock] += random.randint(-1, 1) * config.stocks.change
+        stocks[stock] += random.randint(-1 * config.stocks.change,
+                                        config.stocks.change)
 
     # Resave stocks
     with open("UserData/stocks.json", "w") as file:

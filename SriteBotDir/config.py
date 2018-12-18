@@ -14,7 +14,18 @@ class bot:
 
 class stocks:
 
-    items = ["SRITE", "POG"]
+    items = ["SRITE",
+             "POG",
+             "NWRD",
+             "DMND",
+             "NOTYET",
+             "ANGERY",
+             "BRUH",
+             "AYA",
+             "ANSLY",
+             "SPNWRD",
+             "NGWRD"
+             ]
 
     standard = 100
     change = 5
