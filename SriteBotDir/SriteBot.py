@@ -21,9 +21,6 @@ import time
 
 import json
 
-# Import custom HN67 scripts
-from scripts import *
-
 # Import config file
 import config
 
@@ -56,7 +53,7 @@ async def check_bans(ctx):
 
 
 # Set the cogs which are to be initally loaded
-init_cogs = ["cogs.memes",]
+init_cogs = ["cogs.memes", "cogs.misc", "cogs.general", "cogs.timing"]
 
 
 # Initialize bot
@@ -64,35 +61,44 @@ bot = commands.Bot(command_prefix=("s.","s:"),
                    description="General bot created by HN67")
 
 
-# Actually load the cogs so that the commands can be used
+# Turn on bot and load extensions, etc
 if __name__ == "__main__":
 
+    # Add extensions
     for extension in init_cogs:
 
         try:
             bot.load_extension(extension)
         except Exception as e:
-            debug_info("Failed to load extension {}".format(extension))
+            debug_info("Failed to load extension {}".format(extension),e)
         else:
             debug_info(f"Loaded extension {extension}")
 
 
+    # Start bot
+    debug_info("Starting bot")
+    bot.run(SriteBotInfo.bot_id)
+
+
 @bot.event
 async def on_ready():
-    # Print login information
-    debug_info("Bot logged in as",
-               bot.user.name,
-               bot.user.id)
+    try:
+        # Print login information
+        debug_info("Bot logged in as",
+                   bot.user.name,
+                   bot.user.id)
 
-    # Set activity to help command to give users somewhere to start
-    await bot.change_presence(activity=discord.Game(
-                              name=(bot.command_prefix[0] + "help")))
+        # Set activity to help command to give users somewhere to start
+        await bot.change_presence(activity=discord.Game(
+                                  name=(bot.command_prefix[0] + "help")))
 
-    # Track stocks
-    bot.loop.create_task(track_stocks())
-    
-    # Show that setup is finished (e.g. background tasks have started)
-    debug_info("Finished setup")
+        # Track stocks
+        bot.loop.create_task(track_stocks())
+        
+        # Show that setup is finished (e.g. background tasks have started)
+        debug_info("Finished setup")
+    except Exception:
+        print("DAB")
 
 
 @bot.event
@@ -167,16 +173,6 @@ def srite_msg(value: str):
 
     return discord.Embed(color = config.bot.color, description = value)
 
-@bot.command(short="Greets the bot", description="Gets the bot to reply with Hello,"
-                                                 + "and is used to test a variety of things on backend")
-async def hello(ctx):
-    '''Replies with simple text'''
-    try:
-        await ctx.send("Hi " + ctx.author.nick)
-    except TypeError:
-        await ctx.send("Hi " + ctx.author.name)
-    debug_info("Greeted user", ctx.author.id)
-
 @bot.command()
 async def ping(ctx):
     await ctx.send(embed = srite_msg("pong"))
@@ -191,69 +187,7 @@ async def dabs(ctx):
         await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
     else:
         await ctx.send("Congratulations, you have never dabbed")
-
-async def rand(ctx, bounds):
-    for index in range(len(bounds) - 1):
-        result = random.randint(bounds[index], bounds[index + 1])
-        await ctx.send("Random number between " + str(bounds[index]) + " and "
-                       + str(bounds[index + 1]) + ": " + str(result))
-
-
-@bot.command(name="rand", description="Generates a random number between numbers provided, inclusive")
-async def _rand(ctx, *bounds: int):
-    '''Generates a random number'''
-    await rand(ctx, bounds)
-
-
-@bot.command(description="Generates random numbers, the first argument is amount of repetetions")
-async def mrand(ctx, *bounds: int):
-    '''Generates multiple random numbers'''
-    if await check_bans(ctx):
-        debug_info("Mrand Function activated with  context {0}".format(ctx))
-        for i in range(bounds[0]):
-            await rand(ctx, bounds[1:])
-
-
-@_rand.error
-async def rand_handler(ctx, error):
-    if isinstance(error, discord.ext.commands.BadArgument):
-        await ctx.send("Please use whole numbers")
-    else:
-        print("Unexpected error: ")
-        print(error)
-
-
-@bot.command(description="Returns yes or no")
-async def eight(ctx):
-    '''Shakes a magic eight ball'''
-    # Store options for response in tuple
-    options = ("yes","no","absolutely","maybe","hardly","sure","never")
-    # Respond with random option using .choice
-    await ctx.send(random.choice(options))
-
-@bot.command(description="o o o")
-async def echo(ctx, amount: int, *, message: str):
-    """o o o"""
-    if await check_bans(ctx):
-        for i in range(amount):
-            await ctx.send(message)
-
-
-@echo.error
-async def echo_handler(ctx, error):
-    if isinstance(error, discord.ext.commands.BadArgument):
-        await ctx.send("Please use whole numbers")
-    else:
-        print("Unexpected error: ")
-        print(error)
-
-
-@bot.command(description = "The best music")
-async def crabrave(ctx):
-    """Queues crab rave through fred boat"""
-    # Uses the syntax of another bot called Fred Boat to play a song
-    await ctx.send(";;play https://soundcloud.com/monstercat/noisestorm-crab-rave")
-
+        
 
 # Economy of SriteBot
 @bot.group(pass_context=True, description="Header for eco related commands",
@@ -770,42 +704,6 @@ async def validate_stocks():
     with open("UserData/stocks.json", "w") as file:
         json.dump(data, file)
 
-        
-
-@bot.command()
-async def maze(ctx, size: int):
-    if size <= 30:
-        maze = Maze.MazeGenerator(size).generateMap()
-        maze[size - 1][size//2].borders["bottom"] = False
-        string = Maze.drawMap(maze)
-        string = string[:size + 1*(size % 2  == 0)] + " " + string[size + 1 + 1*(size % 2  == 0):]
-        await ctx.send("```"+string+"```")
-    else:
-        await ctx.send("Max maze size is 30")
-
-@maze.error
-async def maze_handler(ctx, error):
-    if isinstance(error, discord.ext.commands.BadArgument):
-        await ctx.send("Please use whole numbers")
-    else:
-        print("Unexpected error: ")
-        print(error)
-
-@bot.command()
-async def surprise(ctx, delay: int, *, message: str):
-    '''Echos the message after delay seconds'''
-    debug_info("Surprise message",message)
-    await asyncio.sleep(delay)
-    await ctx.send(message)
-
-@surprise.error
-async def surprise_handler(ctx, error):
-    if isinstance(error, discord.ext.commands.BadArgument):
-        await ctx.send("Please use whole numbers")
-    else:
-        print("Unexpected error: ")
-        print(error)
-
 @bot.command(hidden = True)
 async def ban(ctx, member: discord.Member):
     """Adds a discord member to the ban list"""
@@ -823,24 +721,6 @@ async def ban(ctx, member: discord.Member):
         debug_info("Banned {}".format(member) )      
     else:
         await ctx.send("Sorry, you cant do that")
-
-@bot.command()
-async def fact(ctx):
-    """Displays a random calendar fact"""
-    await ctx.send(AltChain.xkcd.value())
-
-@bot.command()
-async def spam(ctx, length: int):
-    """Displays a paragraph from the spam module"""
-    await ctx.send(Spam.paragraph(length))
-
-@spam.error
-async def spam_handler(ctx, error):
-    if isinstance(error, discord.ext.commands.BadArgument):
-        await ctx.send("Please use whole numbers")
-    else:
-        print("Unexpected error: ")
-        print(error)
 
 # Time command respone expectations table
 timeWait = {}
@@ -867,26 +747,6 @@ async def time_response(message):
     # Calculate and output change
     change = round(newTime - oldTime, 1)
     await message.channel.send("Replied in {0} seconds".format(change))
-
-# Tick Interval for timer command
-interval = 1
-
-@bot.command()
-async def timer(ctx, duration: int):
-    """Displays a counting down timer"""
-    # Time remaining
-    left = duration
-    # Create message
-    message = await ctx.send("```Timer: {0}```".format(left))
-    # Tick down through qued remaining time, editing message
-    while left > 0:
-        await message.edit(content = "```Timer: {0}```".format(left))
-        left -= interval
-        await asyncio.sleep(interval)
-    # Finish the timer message
-    await message.edit(content = "```Timer: Done```")
-    # Mention original command author
-    await ctx.send("Timer Finished {0}".format(ctx.author.mention))
 
 
 @bot.command(hidden = True)
