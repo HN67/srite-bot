@@ -2,6 +2,9 @@
 import discord
 from discord.ext import commands
 
+# Import core libraries
+import random
+
 # Cog class
 class General:
 
@@ -32,9 +35,8 @@ class General:
     @commands.command(description="o o o")
     async def echo(self, ctx, amount: int, *, message: str):
         """o o o"""
-        if await check_bans(ctx):
-            for i in range(amount):
-                await ctx.send(message)
+        for i in range(amount):
+            await ctx.send(message)
 
     # Echo command
     @echo.error
@@ -44,6 +46,15 @@ class General:
         else:
             print("Unexpected error: ")
             print(error)
+
+    # Open console command
+    @commands.command(hidden = True)
+    @commands.is_owner()
+    async def console(ctx):
+        """Opens the console to input, only available to HN67"""
+        await ctx.message.delete()
+        temp = input("Request for console input: ")
+        await ctx.send(temp)
 
 # Setup function to load cog
 def setup(bot):

@@ -24,11 +24,15 @@ import json
 # Import config file
 import config
 
+# Import core
+from core import *
+
 # Import sensitive bot info
 import SriteBotInfo
 
 # Set cwd so that bot can be run from anywhere and still functions correctly
 os.chdir(os.path.dirname(__file__))
+
 
 # Debug method
 def debug_info(*messages):
@@ -38,6 +42,11 @@ def debug_info(*messages):
         print(line)
     # Prints finishing line
     print("-----")
+
+# Returns an embed wrapping the text
+def srite_msg(value: str):
+
+    return discord.Embed(color = config.bot.color, description = value)
 
 # Ban-check method
 async def check_bans(ctx):
@@ -51,6 +60,23 @@ async def check_bans(ctx):
     else:
         return True
 
+# Makes sure the guild is equipped to deal with economy (e.g. emoji)
+async def sriteEmoji(guild: discord.Guild):
+
+    for e in guild.emojis:
+        if e.name == "sritecoin":
+            return e
+
+    else:
+        try:
+            with open("resources/sritecoin.png", "rb") as i:
+                emoji = await guild.create_custom_emoji(name="sritecoin",
+                                                        image = i.read())
+            return emoji
+        except discord.errors.Forbidden: 
+            return "SC (No emoji perms)"
+
+
 
 # Set the cogs which are to be initally loaded
 init_cogs = ["cogs.memes", "cogs.misc", "cogs.general", "cogs.timing"]
@@ -61,44 +87,25 @@ bot = commands.Bot(command_prefix=("s.","s:"),
                    description="General bot created by HN67")
 
 
-# Turn on bot and load extensions, etc
-if __name__ == "__main__":
 
-    # Add extensions
-    for extension in init_cogs:
-
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            debug_info("Failed to load extension {}".format(extension),e)
-        else:
-            debug_info(f"Loaded extension {extension}")
-
-
-    # Start bot
-    debug_info("Starting bot")
-    bot.run(SriteBotInfo.bot_id)
 
 
 @bot.event
 async def on_ready():
-    try:
-        # Print login information
-        debug_info("Bot logged in as",
-                   bot.user.name,
-                   bot.user.id)
+    # Print login information
+    debug_info("Bot logged in as",
+               bot.user.name,
+               bot.user.id)
 
-        # Set activity to help command to give users somewhere to start
-        await bot.change_presence(activity=discord.Game(
-                                  name=(bot.command_prefix[0] + "help")))
+    # Set activity to help command to give users somewhere to start
+    await bot.change_presence(activity=discord.Game(
+                              name=(bot.command_prefix[0] + "help")))
 
-        # Track stocks
-        bot.loop.create_task(track_stocks())
-        
-        # Show that setup is finished (e.g. background tasks have started)
-        debug_info("Finished setup")
-    except Exception:
-        print("DAB")
+    # Track stocks
+    bot.loop.create_task(track_stocks())
+    
+    # Show that setup is finished (e.g. background tasks have started)
+    debug_info("Finished setup")
 
 
 @bot.event
@@ -166,12 +173,6 @@ async def count_dabs(message, text, author, channel):
                  .format(count["dab"]["total"],message.author))
     if (original//1000) != (count["dab"]["total"]//1000):
         await channel.send("Jesus, {} Dabs!".format(count["dab"]["total"]//1000*1000))
-
-
-# Returns an embed wrapping the text
-def srite_msg(value: str):
-
-    return discord.Embed(color = config.bot.color, description = value)
 
 @bot.command()
 async def ping(ctx):
@@ -253,21 +254,6 @@ async def eco_data_validate(member: discord.Member):
     with open("UserData/{}/Economy.json".format(member.id), "w") as file:
         json.dump(economy, file)
 
-# Makes sure the guild is equipped to deal with economy (e.g. emoji)
-async def sriteEmoji(guild: discord.Guild):
-
-    for e in guild.emojis:
-        if e.name == "sritecoin":
-            return e
-
-    else:
-        try:
-            with open("resources/sritecoin.png", "rb") as i:
-                emoji = await guild.create_custom_emoji(name="sritecoin",
-                                                        image = i.read())
-            return emoji
-        except discord.errors.Forbidden: 
-            return "SC (No emoji perms)"
             
         
 @economy.command()
@@ -749,13 +735,22 @@ async def time_response(message):
     await message.channel.send("Replied in {0} seconds".format(change))
 
 
-@bot.command(hidden = True)
-async def console(ctx):
-    """Opens the console to input, only available to HN67"""
-    # Only open console if HN67 calls
-    if ctx.author.id == 185944398217871360:
-        await ctx.message.delete()
-        temp = input("Request for console input: ")
-        await ctx.send(temp)
-    
-bot.run(SriteBotInfo.bot_id)
+
+
+# Turn on bot and load extensions, etc
+if __name__ == "__main__":
+
+    # Add extensions
+    for extension in init_cogs:
+
+        try:
+            bot.load_extension(extension)
+        except Exception as e:
+            debug_info("Failed to load extension {}".format(extension),e)
+        else:
+            debug_info(f"Loaded extension {extension}")
+
+
+    # Start bot
+    debug_info("Starting bot")
+    bot.run(SriteBotInfo.bot_id)

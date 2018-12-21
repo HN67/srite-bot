@@ -60,7 +60,7 @@ class Misc:
     @commands.command(name="rand", description="Generates a random number between numbers provided, inclusive")
     async def _rand(self, ctx, *bounds: int):
         '''Generates a random number'''
-        await rand(ctx, bounds)
+        await self.rand(ctx, bounds)
 
 
     @commands.command(description="Generates random numbers, the first argument is amount of repetetions")
@@ -69,7 +69,7 @@ class Misc:
         if await check_bans(ctx):
             debug_info("Mrand Function activated with  context {0}".format(ctx))
             for i in range(bounds[0]):
-                await rand(ctx, bounds[1:])
+                await self.rand(ctx, bounds[1:])
 
 
     @_rand.error

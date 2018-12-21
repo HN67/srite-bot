@@ -2,6 +2,12 @@
 import discord
 from discord.ext import commands
 
+# Import core librarys
+import asyncio
+
+# Import core
+from core import *
+
 # Cog class
 class Timing:
 
@@ -14,14 +20,14 @@ class Timing:
 
     # Surprise command
     @commands.command()
-    async def surprise(ctx, delay: int, *, message: str):
+    async def surprise(self, ctx, delay: int, *, message: str):
         '''Echos the message after delay seconds'''
         debug_info("Surprise message",message)
         await asyncio.sleep(delay)
         await ctx.send(message)
 
     @surprise.error
-    async def surprise_handler(ctx, error):
+    async def surprise_handler(self, ctx, error):
         if isinstance(error, discord.ext.commands.BadArgument):
             await ctx.send("Please use whole numbers")
         else:
@@ -29,7 +35,7 @@ class Timing:
             print(error)
 
     @commands.command()
-    async def timer(ctx, duration: int):
+    async def timer(self, ctx, duration: int):
         """Displays a counting down timer"""
         # Time remaining
         left = duration
