@@ -91,11 +91,6 @@ async def on_message(message):
         if "dab" in text:
             await count_dabs(message, text, author, channel)
 
-    # Check for specific expected responses
-    # Check for timer stop
-    if (channel.id,author.id) in timeWait and text == "stop":
-        await time_response(message)
-
     # Process commands module commands
     await bot.process_commands(message)
 
@@ -134,18 +129,7 @@ async def count_dabs(message, text, author, channel):
 async def ping(ctx):
     await ctx.send(embed = srite_msg("pong"))
 
-@bot.command()
-async def dabs(ctx):
-    """Check your total dabs"""
-    with open("data/count.json", "r") as file:
-        count = json.load(file)
-    debug_info(count,ctx.author.name)
-    if ctx.author.name in count["dab"]:
-        await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
-    else:
-        await ctx.send("Congratulations, you have never dabbed")
         
-
 # Economy of SriteBot
 @bot.group(pass_context=True, description="Header for eco related commands",
            aliases = ["eco","e"])
@@ -645,53 +629,6 @@ async def validate_stocks():
     # Resave stocks
     with open("data/stocks.json", "w") as file:
         json.dump(data, file)
-
-@bot.command(hidden = True)
-async def ban(ctx, member: discord.Member):
-    """Adds a discord member to the ban list"""
-    # Only do the banning if HN67 calls the command
-    if ctx.author.id == 185944398217871360:       
-        # Load the current ban file
-        with open("banned.json", "r") as file:
-            bans = json.load(file)
-        # Update new ban
-        bans[member.id] = True
-        # Save ban file
-        with open("banned.json".format(ctx.author.id), "w") as file:
-            json.dump(bans, file)
-        # Show debug info
-        debug_info("Banned {}".format(member) )      
-    else:
-        await ctx.send("Sorry, you cant do that")
-
-# Time command respone expectations table
-timeWait = {}
-
-@bot.command(name="time")
-async def _time(ctx):
-    """Say 'stop' after running command to time yourself"""
-    # Saves current time (according to this)
-    current = time.time()
-    debug_info(ctx.channel.id, ctx.author.id)
-    timeWait[(ctx.channel.id, ctx.author.id)] = current
-    await asyncio.sleep(5)
-    if (ctx.channel.id, ctx.author.id) in timeWait:
-        timeWait.pop((ctx.channel.id, ctx.author.id))
-        await ctx.send("Timeout at 5 seconds")
-
-async def time_response(message):
-    # Save old time
-    oldTime = timeWait[(message.channel.id, message.author.id)]
-    # Remove tracker
-    timeWait.pop((message.channel.id, message.author.id))
-    # Check new time
-    newTime = time.time()
-    # Calculate and output change
-    change = round(newTime - oldTime, 1)
-    await message.channel.send("Replied in {0} seconds".format(change))
-
-
-
 
 # Turn on bot and load extensions, etc
 if __name__ == "__main__":

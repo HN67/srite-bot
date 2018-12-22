@@ -33,3 +33,8 @@ class stocks:
     tradeChange = 1
 
     updateFrequency = 300
+
+class time:
+
+    interval = 1
+    timeout = 10

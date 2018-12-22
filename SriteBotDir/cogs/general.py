@@ -4,6 +4,9 @@ from discord.ext import commands
 
 # Import core libraries
 import random
+import json
+
+from core import *
 
 # Cog class
 class General:
@@ -55,6 +58,17 @@ class General:
         await ctx.message.delete()
         temp = input("Request for console input: ")
         await ctx.send(temp)
+
+    @commands.command()
+    async def dabs(self, ctx):
+        """Check your total dabs"""
+        with open("data/count.json", "r") as file:
+            count = json.load(file)
+        debug_info(count,ctx.author.name)
+        if ctx.author.name in count["dab"]:
+            await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
+        else:
+            await ctx.send("Congratulations, you have never dabbed")
 
 # Setup function to load cog
 def setup(bot):

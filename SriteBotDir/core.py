@@ -3,6 +3,9 @@
 import discord
 from discord.ext import commands
 
+# Import config
+import config
+
 # Makes sure the guild is equipped to deal with economy (e.g. emoji)
 async def sriteEmoji(guild: discord.Guild):
 
@@ -23,6 +26,11 @@ async def sriteEmoji(guild: discord.Guild):
 def srite_msg(value: str):
 
     return discord.Embed(color = config.bot.color, description = value)
+
+# Sends an embedded msg to channel
+async def srite_send(channel: discord.TextChannel, message: str):
+
+    await channel.send(embed = srite_msg(message))
 
 # Debug method
 def debug_info(*messages):
