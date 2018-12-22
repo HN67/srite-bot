@@ -34,50 +34,6 @@ import SriteBotInfo
 os.chdir(os.path.dirname(__file__))
 
 
-# Debug method
-def debug_info(*messages):
-    '''Function for printing seperate information chunks'''
-    # Prints each debug in the var-arg
-    for line in messages:
-        print(line)
-    # Prints finishing line
-    print("-----")
-
-# Returns an embed wrapping the text
-def srite_msg(value: str):
-
-    return discord.Embed(color = config.bot.color, description = value)
-
-# Ban-check method
-async def check_bans(ctx):
-    with open("banned.json", "r") as file:
-        bans = json.load(file)
-    debug_info(ctx.author.id,bans)
-    if str(ctx.author.id) in bans:
-        await ctx.send("Sorry, it seems you have been banned from parts of SriteBot")
-        await ctx.send("If you think this is an error, please contact @HN67")
-        return False
-    else:
-        return True
-
-# Makes sure the guild is equipped to deal with economy (e.g. emoji)
-async def sriteEmoji(guild: discord.Guild):
-
-    for e in guild.emojis:
-        if e.name == "sritecoin":
-            return e
-
-    else:
-        try:
-            with open("resources/sritecoin.png", "rb") as i:
-                emoji = await guild.create_custom_emoji(name="sritecoin",
-                                                        image = i.read())
-            return emoji
-        except discord.errors.Forbidden: 
-            return "SC (No emoji perms)"
-
-
-
 # Set the cogs which are to be initally loaded
 init_cogs = ["cogs.memes", "cogs.misc", "cogs.general", "cogs.timing"]
 
@@ -129,7 +85,7 @@ async def on_message(message):
         elif "lmao" in text:
             await channel.send("tag me")
         if "good bot" == text:
-            await channel.send("thanks hooman uwu")
+            await channel.send("thanks human")
         elif "hello" == text:
             await channel.send("owo whats this")
         if "dab" in text:
@@ -146,7 +102,7 @@ async def on_message(message):
 
 async def count_dabs(message, text, author, channel):
     # Load count file
-    with open("count.json", "r") as file:
+    with open("UserData/count.json", "r") as file:
         count = json.load(file)
     # Save original
     try:
@@ -166,7 +122,7 @@ async def count_dabs(message, text, author, channel):
     else:
         count["dab"][author.name] = text.count("dab")
     # Redump json file
-    with open("count.json", "w") as file:
+    with open("UserData/count.json", "w") as file:
         json.dump(count, file)
     # Display count
     await channel.send("```Dab Count: {0}\nLast Dab: {1}```"
@@ -181,7 +137,7 @@ async def ping(ctx):
 @bot.command()
 async def dabs(ctx):
     """Check your total dabs"""
-    with open("count.json", "r") as file:
+    with open("UserData/count.json", "r") as file:
         count = json.load(file)
     debug_info(count,ctx.author.name)
     if ctx.author.name in count["dab"]:
