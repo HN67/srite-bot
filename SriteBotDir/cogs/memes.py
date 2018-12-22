@@ -19,7 +19,7 @@ class Memes:
 
     @meme.command(description="dot dab")
     async def dab(self, ctx):
-        await ctx.send(file=discord.File("resource/dab.jpg"))
+        await ctx.send(file=discord.File("resources/dab.jpg"))
 
 
     @meme.command(description="doge")

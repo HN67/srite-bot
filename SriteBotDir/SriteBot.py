@@ -102,7 +102,7 @@ async def on_message(message):
 
 async def count_dabs(message, text, author, channel):
     # Load count file
-    with open("UserData/count.json", "r") as file:
+    with open("data/count.json", "r") as file:
         count = json.load(file)
     # Save original
     try:
@@ -122,7 +122,7 @@ async def count_dabs(message, text, author, channel):
     else:
         count["dab"][author.name] = text.count("dab")
     # Redump json file
-    with open("UserData/count.json", "w") as file:
+    with open("data/count.json", "w") as file:
         json.dump(count, file)
     # Display count
     await channel.send("```Dab Count: {0}\nLast Dab: {1}```"
@@ -137,7 +137,7 @@ async def ping(ctx):
 @bot.command()
 async def dabs(ctx):
     """Check your total dabs"""
-    with open("UserData/count.json", "r") as file:
+    with open("data/count.json", "r") as file:
         count = json.load(file)
     debug_info(count,ctx.author.name)
     if ctx.author.name in count["dab"]:
@@ -161,22 +161,22 @@ async def economy(ctx):
 async def eco_data_validate(member: discord.Member):
 
     # Check that path exists
-    if Path("UserData/{}".format(member.id)).is_dir():
+    if Path("data/{}".format(member.id)).is_dir():
 
         pass
 
     else:
 
         # Create Path
-        Path("UserData/{}".format(member.id)).mkdir(parents=True, exist_ok=True)
+        Path("data/{}".format(member.id)).mkdir(parents=True, exist_ok=True)
 
     # Update info file
-    with open("UserData/{}/Info.json".format(member.id), "w") as file:
+    with open("data/{}/Info.json".format(member.id), "w") as file:
         json.dump({"id": member.id, "name": member.name}, file)
 
     # Check state of Economy file
     try:
-        with open("UserData/{}/Economy.json".format(member.id), "r") as file:
+        with open("data/{}/Economy.json".format(member.id), "r") as file:
             economy = json.load(file)
 
     # Clause activates if file does not exist
@@ -207,7 +207,7 @@ async def eco_data_validate(member: discord.Member):
                     economy["stocks"][key] = 0
 
     # Update economy data
-    with open("UserData/{}/Economy.json".format(member.id), "w") as file:
+    with open("data/{}/Economy.json".format(member.id), "w") as file:
         json.dump(economy, file)
 
             
@@ -216,7 +216,7 @@ async def eco_data_validate(member: discord.Member):
 async def tax(ctx):
 
     # Save file path to clean code
-    ecoFile = "UserData/{}/Economy.json".format(ctx.author.id)
+    ecoFile = "data/{}/Economy.json".format(ctx.author.id)
 
     # Check last acsessed time to see if it was less than an hour ago
     with open(ecoFile, "r") as file:
@@ -262,7 +262,7 @@ async def money(ctx, member: discord.Member = None):
         user = member
 
     # Save path for cleaner code
-    ecoFile = "UserData/{}/Economy.json".format(user.id)
+    ecoFile = "data/{}/Economy.json".format(user.id)
 
     # Get data
     with open(ecoFile, "r") as file:
@@ -289,11 +289,11 @@ async def give(ctx, member: discord.Member, amount: int):
     await eco_data_validate(member)
 
     # Pull sender date for later use
-    with open("UserData/{}/Economy.json".format(ctx.author.id)) as file:
+    with open("data/{}/Economy.json".format(ctx.author.id)) as file:
         data = json.load(file)
 
     # Get data of receiver
-    with open("UserData/{}/Economy.json".format(member.id)) as file:
+    with open("data/{}/Economy.json".format(member.id)) as file:
         other = json.load(file)
 
     # Check if funds are available
@@ -313,10 +313,10 @@ async def give(ctx, member: discord.Member, amount: int):
 
         debug_info(data, other)
         # Resave data
-        with open("UserData/{}/Economy.json".format(ctx.author.id), "w") as file:
+        with open("data/{}/Economy.json".format(ctx.author.id), "w") as file:
             json.dump(data, file)
 
-        with open("UserData/{}/Economy.json".format(member.id), "w") as file:
+        with open("data/{}/Economy.json".format(member.id), "w") as file:
             json.dump(other, file)
 
     else:
@@ -375,12 +375,12 @@ async def hash(ctx):
         await eco_data_validate(msg.author)
         
         # Increase collector money
-        with open(f"UserData/{msg.author.id}/Economy.json", "r") as file:
+        with open(f"data/{msg.author.id}/Economy.json", "r") as file:
             data = json.load(file)
 
         data["money"] += len(msg.content)
 
-        with open(f"UserData/{msg.author.id}/Economy.json", "w") as file:
+        with open(f"data/{msg.author.id}/Economy.json", "w") as file:
             json.dump(data, file)
 
         # Delete messages
@@ -410,7 +410,7 @@ async def market(ctx):
     embed = discord.Embed(color = config.bot.color, title = "Market")
 
     # Load stocks
-    with open("UserData/stocks.json", "r") as file:
+    with open("data/stocks.json", "r") as file:
         stocks = json.load(file)
 
     # Add fields for each stock
@@ -429,11 +429,11 @@ async def portfolio(ctx, member: discord.Member = None):
         member = ctx.author
 
     # Load data
-    with open(f"UserData/{member.id}/Economy.json") as file:
+    with open(f"data/{member.id}/Economy.json") as file:
         data = json.load(file)
 
     # Load stock values
-    with open("UserData/stocks.json") as file:
+    with open("data/stocks.json") as file:
         stocks = json.load(file)
 
     # Create embed
@@ -472,11 +472,11 @@ async def portfolio(ctx, member: discord.Member = None):
 async def buy(ctx, stock, amount: int = 1):
 
     # Load stocks
-    with open("UserData/stocks.json", "r") as file:
+    with open("data/stocks.json", "r") as file:
         stocks = json.load(file)
 
     # Load user economy
-    with open(f"UserData/{ctx.author.id}/Economy.json", "r") as file:
+    with open(f"data/{ctx.author.id}/Economy.json", "r") as file:
         eco = json.load(file)
 
     # Check if stock exists (case doesnt matter)
@@ -498,14 +498,14 @@ async def buy(ctx, stock, amount: int = 1):
             eco["stocks"][stock] += amount
 
             # Resave data
-            with open(f"UserData/{ctx.author.id}/Economy.json", "w") as file:
+            with open(f"data/{ctx.author.id}/Economy.json", "w") as file:
                 json.dump(eco, file)
 
             # Change stock price
             stocks[stock] += config.stocks.tradeChange*amount
 
             # Save stock data
-            with open("UserData/stocks.json", "w") as file:
+            with open("data/stocks.json", "w") as file:
                 json.dump(stocks, file)
 
             # Send sucsess message
@@ -529,11 +529,11 @@ async def buy(ctx, stock, amount: int = 1):
 async def sell(ctx, stock, amount: int = 1):
 
     # Load stocks
-    with open("UserData/stocks.json", "r") as file:
+    with open("data/stocks.json", "r") as file:
         stocks = json.load(file)
 
     # Load user economy
-    with open(f"UserData/{ctx.author.id}/Economy.json", "r") as file:
+    with open(f"data/{ctx.author.id}/Economy.json", "r") as file:
         eco = json.load(file)
 
     # Check if stock exists (case doesnt matter)
@@ -555,14 +555,14 @@ async def sell(ctx, stock, amount: int = 1):
             eco["money"] += price
 
             # Resave data
-            with open(f"UserData/{ctx.author.id}/Economy.json", "w") as file:
+            with open(f"data/{ctx.author.id}/Economy.json", "w") as file:
                 json.dump(eco, file)
 
             # Change stock price
             stocks[stock] -= config.stocks.tradeChange*amount
 
             # Save stock data
-            with open("UserData/stocks.json", "w") as file:
+            with open("data/stocks.json", "w") as file:
                 json.dump(stocks, file)
 
             # Send sucsess message
@@ -603,7 +603,7 @@ async def update_stocks():
     await validate_stocks()
 
     # Load stocks
-    with open("UserData/stocks.json", "r") as file:
+    with open("data/stocks.json", "r") as file:
         stocks = json.load(file)
 
     # Update stocks
@@ -613,7 +613,7 @@ async def update_stocks():
                                         config.stocks.change)
 
     # Resave stocks
-    with open("UserData/stocks.json", "w") as file:
+    with open("data/stocks.json", "w") as file:
         json.dump(stocks, file)
 
 async def validate_stocks():
@@ -624,7 +624,7 @@ async def validate_stocks():
     # Make sure stock file exists
     try:
 
-        with open("UserData/stocks.json", "r") as file:
+        with open("data/stocks.json", "r") as file:
 
             # Load it if it does exist
             data = json.load(file)
@@ -643,7 +643,7 @@ async def validate_stocks():
                 data[stock] = config.stocks.standard
 
     # Resave stocks
-    with open("UserData/stocks.json", "w") as file:
+    with open("data/stocks.json", "w") as file:
         json.dump(data, file)
 
 @bot.command(hidden = True)

@@ -1,2 +1,7 @@
 # Ignore SriteBotInfo
 SriteBotInfo.py
+
+# Ignore pycaches
+__pycache__/
+cogs/__pycache__/
+scripts/__pycache__/
