@@ -3,6 +3,9 @@
 import discord
 from discord.ext import commands
 
+# Import core libararies
+import json
+
 # Import config
 import config
 
@@ -40,3 +43,4 @@ def debug_info(*messages):
         print(line)
     # Prints finishing line
     print("-----")
+

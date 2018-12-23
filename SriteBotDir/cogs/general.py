@@ -70,6 +70,90 @@ class General:
         else:
             await ctx.send("Congratulations, you have never dabbed")
 
+
+    # On message event
+    async def on_message(self, message):
+        
+        # Make sure author is not SriteBot (prevent loops)
+        if message.author.id != 348653600345423873:
+
+            # Relable message content
+            text = message.content.lower()
+            # Relable channel
+            channel = message.channel
+            # Relable author
+            author = message.author
+            
+            # Search for certain phrases
+            if "im " in text:
+                await channel.send("hi {0}, im SriteBot.".format(
+                                    text[text.find("im") + 2:].strip()))
+
+            elif "http" in text:
+                if random.randint(1,2) == 1:
+                    await channel.send("[removed]")
+                    
+            elif "lmao" in text:
+                await channel.send("tag me")
+                
+            if "good bot" == text:
+                await channel.send("thanks human")
+                
+            elif "hello" == text:
+                await channel.send("owo whats this")
+                
+            if "dab" in text:
+                await count_dabs(message)
+            
+        
+# Function to parse message for dabs
+async def count_dabs(message):
+
+    # Relable message content
+    text = message.content.lower()
+    # Relable channel
+    channel = message.channel
+    # Relable author
+    author = message.author
+    
+    # Load count file
+    with open("data/dabs.json", "r") as file:
+        count = json.load(file)
+        
+    # Save original
+    try:
+        original = count["total"]
+    except KeyError:
+        original = 0
+        
+    # Increment/Create dab counter
+    debug_info(count)
+    
+    # Total counter
+    try:
+        count["total"] += text.count("dab")
+    except KeyError:
+        count["total"] = text.count("dab")
+
+    # Individual counter    
+    try:
+        count[author.name] += text.count("dab")
+    except KeyError:
+        count[author.name] = text.count("dab")
+        
+    # Redump json file
+    with open("data/dabs.json", "w") as file:
+        json.dump(count, file)
+        
+    # Display count
+    await channel.send("```Dab Count: {0}\nLast Dab: {1}```"
+                 .format(count["total"],message.author))
+
+    # Track 1000 milestones
+    if (original//1000) != (count["total"]//1000):
+        await channel.send("Jesus, {} Dabs!".format(count["total"]//1000*1000))
+
+
 # Setup function to load cog
 def setup(bot):
     bot.add_cog(General(bot))
