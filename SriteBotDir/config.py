@@ -8,6 +8,8 @@ class economy:
 
     attributes = ["money", "taxTime"]
 
+    hashLength = 100
+
 class bot:
 
     color = 0x00A229
@@ -38,3 +40,11 @@ class time:
 
     interval = 1
     timeout = 10
+
+
+class uni:
+
+    leftArrow = "\u2B05"#"\u21E6"
+    upArrow = "\u2B06"
+    rightArrow = "\u27A1"#"\u27A1"
+    downArrow = "\u2B07"#"\u21E9"

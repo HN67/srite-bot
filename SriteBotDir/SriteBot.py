@@ -65,6 +65,13 @@ async def on_message(message):
 @bot.command()
 async def ping(ctx):
     await ctx.send(embed = srite_msg("pong"))
+
+
+# Test command for various things
+@bot.command()
+async def test(ctx):
+    await srite_send(ctx.channel, "".join((config.uni.upArrow, config.uni.rightArrow,
+                                          config.uni.downArrow, config.uni.leftArrow)))
     
 
 # Set the cogs which are to be initally loaded

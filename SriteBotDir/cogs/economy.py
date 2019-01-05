@@ -216,16 +216,19 @@ class Economy:
     @economy.command(aliases = ["h"])
     async def hash(self, ctx):
 
+        # Create list of arrows
+        arrows = [config.uni.leftArrow,
+                  config.uni.upArrow,
+                  config.uni.downArrow,
+                  config.uni.rightArrow]
+
         # Create string of numbers for user to reply
         string = []
-        for i in range(1000):
-            string.append(random.randint(0, 9))
+        for i in range(config.economy.hashLength):
+            string.append(random.randint(0, 3))
 
         # Condense string
-        display_string = "".join((str(i) for i in string))
-
-        # Save incremented string
-        inc_string = "".join((str(i+1) if i < 9 else "0" for i in string))
+        display_string = "".join((arrows[i] for i in string))
 
         # Display string
         embed = discord.Embed(color = config.bot.color,
@@ -233,48 +236,55 @@ class Economy:
                               description = display_string)
         embed.add_field(name = "Last Harvest", value = "None")
         display = await ctx.send(embed = embed)
+
+        # Add reactions
+        for i in range(4):
+            await display.add_reaction(arrows[i])
         
         # Define the predicate
-        def check(msg):
-            return (inc_string.startswith(msg.content)
-                and msg.channel == ctx.channel and msg.content != "")
+        def check(reaction, user):
+            return (reaction.message.id == display.id and
+                    (reaction.emoji == display_string[0]) and
+                    user != self.bot.user)
 
         # While the hash still exists
         while len(display_string) > 0:
 
-            debug_info("In hash loop",len(display_string))
+            debug_info("Next char:", display_string[0])
             
             # Wait for reply
-            msg = await bot.wait_for("message", check = check)
+            rxn, user = await self.bot.wait_for("reaction_add", check = check)
 
+            debug_info("Valid Event", rxn, user)
+            
             # Slice off strings
-            display_string = display_string[len(msg.content):]
-            inc_string = inc_string[len(msg.content):]
+            display_string = display_string[1:]
 
             # Update display string
-            emoji = await sriteEmoji(msg.guild)
+            emoji = await sriteEmoji(display.guild)
             embed.description = display_string
             embed.set_field_at(0, name = "Last Harvest",
-                               value = f"{msg.content} by {msg.author.display_name} for {len(msg.content)} {emoji}")
+                               value = f"{rxn.emoji} by {user.display_name} for 1 {emoji}")
 
             await display.edit(embed = embed)
             
             # Validate author
-            await eco_data_validate(msg.author)
+            await eco_data_validate(user)
             
             # Increase collector money
-            with open(f"data/{msg.author.id}/Economy.json", "r") as file:
+            with open(f"data/{user.id}/Economy.json", "r") as file:
                 data = json.load(file)
 
-            data["money"] += len(msg.content)
+            data["money"] += 1
 
-            with open(f"data/{msg.author.id}/Economy.json", "w") as file:
+            with open(f"data/{user.id}/Economy.json", "w") as file:
                 json.dump(data, file)
 
-            # Delete messages
-            await msg.delete()
+            # Delete reaction
+            await display.remove_reaction(rxn, user)
 
         debug_info("Out of hash loop",len(display_string))
+        await display.delete()
     
     # Tax command
     @economy.command()
