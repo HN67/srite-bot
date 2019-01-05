@@ -23,7 +23,7 @@ import os
 import config
 
 # Import core
-from core import *
+import core
 
 # Import sensitive bot info
 import SriteBotInfo
@@ -41,7 +41,7 @@ bot = commands.Bot(command_prefix=("s.","s:"),
 @bot.event
 async def on_ready():
     # Print login information
-    debug_info("Bot logged in as",
+    core.debug_info("Bot logged in as",
                bot.user.name,
                bot.user.id)
 
@@ -50,7 +50,7 @@ async def on_ready():
                               name=(bot.command_prefix[0] + "help")))
     
     # Show that setup is finished (e.g. background tasks have started)
-    debug_info("Finished setup")
+    core.debug_info("Finished setup")
 
 
 # Event that fires every message that the bot can see
@@ -64,13 +64,13 @@ async def on_message(message):
 # Ping command
 @bot.command()
 async def ping(ctx):
-    await ctx.send(embed = srite_msg("pong"))
+    await ctx.send(embed = core.srite_msg("pong"))
 
 
 # Test command for various things
 @bot.command()
 async def test(ctx):
-    await srite_send(ctx.channel, "Test")
+    await core.srite_send(ctx.channel, "Test")
 
 
 # Set the cogs which are to be initally loaded
@@ -87,11 +87,11 @@ if __name__ == "__main__":
         try:
             bot.load_extension(extension)
         except Exception as e:
-            debug_info("Failed to load extension {}".format(extension),e)
+            core.debug_info("Failed to load extension {}".format(extension),e)
         else:
-            debug_info(f"Loaded extension {extension}")
+            core.debug_info(f"Loaded extension {extension}")
 
 
     # Start bot
-    debug_info("Starting bot")
+    core.debug_info("Starting bot")
     bot.run(SriteBotInfo.bot_id)
