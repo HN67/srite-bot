@@ -6,7 +6,7 @@ from discord.ext import commands
 import random
 import json
 
-from core import *
+import core
 
 # Cog class
 class General:
@@ -24,7 +24,7 @@ class General:
             await ctx.send("Hi " + ctx.author.nick)
         except TypeError:
             await ctx.send("Hi " + ctx.author.name)
-        debug_info("Greeted user", ctx.author.id)
+        core.debug_info("Greeted user", ctx.author.id)
 
     # Eightball command
     @commands.command(description="Returns yes or no")
@@ -53,7 +53,7 @@ class General:
     # Open console command
     @commands.command(hidden = True)
     @commands.is_owner()
-    async def console(ctx):
+    async def console(self, ctx):
         """Opens the console to input, only available to HN67"""
         await ctx.message.delete()
         temp = input("Request for console input: ")
@@ -64,7 +64,7 @@ class General:
         """Check your total dabs"""
         with open("data/count.json", "r") as file:
             count = json.load(file)
-        debug_info(count,ctx.author.name)
+        core.debug_info(count,ctx.author.name)
         if ctx.author.name in count["dab"]:
             await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
         else:
@@ -127,7 +127,7 @@ async def count_dabs(message):
         original = 0
         
     # Increment/Create dab counter
-    debug_info(count)
+    core.debug_info(count)
     
     # Total counter
     try:
