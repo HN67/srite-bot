@@ -70,7 +70,7 @@ async def ping(ctx):
 # Test command for various things
 @bot.command()
 async def test(ctx):
-    await srite_send(ctx.channel, await sriteEmoji(ctx.guild))
+    await srite_send(ctx.channel, "Test")
 
 
 # Set the cogs which are to be initally loaded
