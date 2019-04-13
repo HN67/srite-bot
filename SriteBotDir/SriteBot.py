@@ -69,8 +69,8 @@ async def ping(ctx):
 
 # Test command for various things
 @bot.command()
-async def test(ctx):
-    await core.srite_send(ctx.channel, "Test")
+async def test(ctx, number: int):
+    await core.srite_send(ctx.channel, number + 1)
 
 
 # Set the cogs which are to be initally loaded
