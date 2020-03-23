@@ -32,7 +32,9 @@ class stocks:
              "AYA",
              "ANSLY",
              "SPNWRD",
-             "NGWRD"
+             "NGWRD",
+             "CORONA",
+             "ALLAH"
              ]
 
     standard = 100
