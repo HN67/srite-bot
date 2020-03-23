@@ -1,23 +1,14 @@
-# HN67's SriteBot
-# Invite URL: https://discordapp.com/oauth2/authorize?&client_id=348653600345423873&scope=bot&permissions=0
+"""
+HN67's SriteBot
+https://discordapp.com/oauth2/authorize?&client_id=348653600345423873&scope=bot&permissions=0
+"""
 
-# Import various modules
+# Import python modules
+import os
 
 # Import core modules for discord API
-import discord as discord
+import discord
 from discord.ext import commands
-import asyncio
-
-# Import core library modules
-import random
-import re
-import threading
-import datetime
-import time
-
-import json
-
-import os
 
 # Import config file
 import config
@@ -33,22 +24,29 @@ os.chdir(os.path.dirname(__file__))
 
 
 # Initialize bot
-bot = commands.Bot(command_prefix=("s.","s:"),
+bot = commands.Bot(command_prefix=config.bot.prefixes,
                    description="General bot created by HN67")
 
 
 # Event that fires once the bot is fully logged in
 @bot.event
 async def on_ready():
+    """Callback run once bot is fully logged in"""
+
     # Print login information
-    core.debug_info("Bot logged in as",
-               bot.user.name,
-               bot.user.id)
+    core.debug_info(
+        "Bot logged in as",
+        bot.user.name,
+        bot.user.id
+    )
 
     # Set activity to help command to give users somewhere to start
-    await bot.change_presence(activity=discord.Game(
-                              name=(bot.command_prefix[0] + "help")))
-    
+    await bot.change_presence(
+        activity=discord.Game(
+            name=(bot.command_prefix[0] + "help")
+        )
+    )
+
     # Show that setup is finished (e.g. background tasks have started)
     core.debug_info("Finished setup")
 
@@ -56,6 +54,7 @@ async def on_ready():
 # Event that fires every message that the bot can see
 @bot.event
 async def on_message(message):
+    """Callback run whenever a messege is sent"""
 
     # Process commands module commands
     await bot.process_commands(message)
@@ -64,12 +63,14 @@ async def on_message(message):
 # Ping command
 @bot.command()
 async def ping(ctx):
-    await ctx.send(embed = core.srite_msg("pong"))
+    """Ping command to test bot connectivity"""
+    await ctx.send(embed=core.srite_msg("pong"))
 
 
 # Test command for various things
 @bot.command()
 async def test(ctx, number: int):
+    """Test command to test various features"""
     await core.srite_send(ctx.channel, number + 1)
 
 
@@ -86,8 +87,8 @@ if __name__ == "__main__":
 
         try:
             bot.load_extension(extension)
-        except Exception as e:
-            core.debug_info("Failed to load extension {}".format(extension),e)
+        except Exception as e: #pylint: disable=broad-except
+            core.debug_info("Failed to load extension {}".format(extension), e)
         else:
             core.debug_info(f"Loaded extension {extension}")
 
