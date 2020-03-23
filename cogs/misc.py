@@ -5,7 +5,7 @@ from discord.ext import commands
 # Import custom HN67 scripts
 from scripts import *
 
-class Misc:
+class Misc(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot

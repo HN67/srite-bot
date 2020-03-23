@@ -9,7 +9,7 @@ import json
 import core
 
 # Cog class
-class General:
+class General(commands.Cog):
 
     # Init to reference bot
     def __init__(self, bot):

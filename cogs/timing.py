@@ -13,7 +13,7 @@ from core import *
 import config
 
 # Cog class
-class Timing:
+class Timing(commands.Cog):
 
     # Init to reference bot
     def __init__(self, bot):

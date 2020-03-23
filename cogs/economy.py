@@ -121,7 +121,7 @@ async def update_stocks():
     with open("data/stocks.json", "w") as file:
         json.dump(stocks, file)        
 
-class Economy:
+class Economy(commands.Cog):
 
     # Init constructor to reference bot
     def __init__(self, bot):
