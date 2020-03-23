@@ -1,11 +1,14 @@
-# General commands cog for SriteBot
-import discord
-from discord.ext import commands
+"""General commands cog for SriteBot"""
 
 # Import core libraries
 import random
 import json
 
+# Import discord.py
+import discord
+from discord.ext import commands
+
+# Import core
 import core
 
 # Cog class
@@ -72,6 +75,7 @@ class General(commands.Cog):
 
 
     # On message event
+    @commands.Cog.listener()
     async def on_message(self, message):
         
         # Make sure author is not SriteBot (prevent loops)

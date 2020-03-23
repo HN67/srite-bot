@@ -2,6 +2,9 @@
 import discord
 from discord.ext import commands
 
+# Import python modules
+import random
+
 # Import custom HN67 scripts
 from scripts import *
 
@@ -50,7 +53,7 @@ class Misc(commands.Cog):
             debug_info("Unexpected error: ",error)
 
     # Random number generator
-    async def rand(ctx, bounds):
+    async def rand(self, ctx, bounds):
         for index in range(len(bounds) - 1):
             result = random.randint(bounds[index], bounds[index + 1])
             await ctx.send("Random number between " + str(bounds[index]) + " and "

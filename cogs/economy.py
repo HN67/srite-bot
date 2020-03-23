@@ -530,6 +530,7 @@ class Economy(commands.Cog):
 
 
     # Extend on_ready to track stocks
+    @commands.Cog.listener()
     async def on_ready(self):
 
         debug_info("Economy startup")
