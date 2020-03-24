@@ -6,6 +6,10 @@ class economy:
     taxAmount = 100
     taxTime = 3600
 
+    growTimeMin = 10
+    growTimeMax = 300
+    growRatio = 0.1 # Number of coins grown per second
+
     collectTime = 10.0
 
     attributes = ["money", "taxTime"]

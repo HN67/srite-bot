@@ -127,7 +127,7 @@ class Economy(commands.Cog):
     """SriteBot Economy Cog"""
 
     # Init constructor to reference bot
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
 
     # Economy group of SriteBot
@@ -348,6 +348,89 @@ class Economy(commands.Cog):
             await ctx.send(embed=core.srite_msg(
                 f"{rem} remaining before you can tax again"
             ))
+
+    # Plant command
+    @economy.command(
+        aliases=["p"],
+        description="First user to pick the coins keeps them"
+    )
+    async def plant(self, ctx: commands.Context):
+        """Plants a SriteCoin in the context channel"""
+
+        # Load caller economy data
+        economyPath = f"data/{ctx.author.id}/Economy.json"
+
+        with open(economyPath, "r") as file:
+            eco = json.load(file)
+
+        # Check if the caller has a coin to plant
+        if not eco["money"] > 0:
+            # Show "error" message
+            await core.srite_send(ctx, f"You have no {await core.sriteEmoji(ctx.guild)} to plant")
+
+        else:
+            # Save emoji to prevent repeated reloading
+            emoji = await core.sriteEmoji(ctx.guild)
+
+            # Show success message
+            embed = core.srite_msg(f"Planted a {emoji}")
+            plant = await ctx.send(embed=embed)
+
+            # Remove coin
+            eco["money"] -= 1
+
+            # Save caller eco data
+            with open(economyPath, "w") as file:
+                json.dump(eco, file)
+
+            # Wait random number of seconds within config range
+            sleep = random.randint(config.economy.growTimeMin, config.economy.growTimeMax)
+            core.debug_info(f"Planting coin from {ctx.author} for {sleep} seconds")
+            await asyncio.sleep(sleep)
+
+            # Send growth message
+            growth = int(sleep * config.economy.growRatio)
+            core.debug_info(f"Sprouted {growth} coins")
+            # Edit original plant message
+            embed.description += " (Sprouted)"
+            await plant.edit(embed=embed)
+            # Send notification
+            notification = await core.srite_send(
+                ctx,
+                f"A planted {emoji} has sprouted into {growth} more!\n" +
+                "Type `harvest` to harvest them!"
+            )
+            core.debug_info(f"Sent sprout notification")
+
+            # Wait for harvest message
+            message = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.content == "harvest" and m.channel == ctx.channel
+            )
+
+            # Reply to harvest message
+            core.debug_info(f"Harvesting coins for {message.author}")
+            await core.srite_send(
+                ctx,
+                f"{message.author.display_name} has harvested {growth} {emoji}!"
+            )
+            # Delete notification message to reduce channel clutter
+            await notification.delete()
+            #await message.delete()
+
+            # Eco validate collector
+            await eco_data_validate(message.author)
+
+            # Increase collector money
+            economyPath = f"data/{message.author.id}/Economy.json"
+            with open(economyPath, "r") as file:
+                eco = json.load(file)
+
+            eco["money"] += growth
+
+            with open(economyPath, "w") as file:
+                json.dump(eco, file)
+
 
     ### Stocks area
 
