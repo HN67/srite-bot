@@ -259,9 +259,10 @@ class Economy(commands.Cog):
 
         # Define the predicate
         def check(reaction, user):
-            return (reaction.message.id == display.id and
-                    (reaction.emoji == display_string[0]) and
-                    user != self.bot.user)
+            return (
+                reaction.message.id == display.id
+                and user != self.bot.user
+            )
 
         # While the hash still exists
         while len(display_string) > 0: #pylint: disable=len-as-condition
@@ -272,6 +273,12 @@ class Economy(commands.Cog):
             rxn, user = await self.bot.wait_for("reaction_add", check=check)
 
             core.debug_info("Valid Event", rxn, user)
+
+            # Delete reaction
+            await display.remove_reaction(rxn, user)
+
+            if not rxn.emoji == display_string[0]:
+                continue
 
             # Slice off strings
             display_string = display_string[1:]
@@ -295,9 +302,6 @@ class Economy(commands.Cog):
 
             with open(f"data/{user.id}/Economy.json", "w") as file:
                 json.dump(data, file)
-
-            # Delete reaction
-            await display.remove_reaction(rxn, user)
 
         core.debug_info("Out of hash loop", len(display_string))
         await display.delete()

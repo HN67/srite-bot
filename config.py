@@ -3,7 +3,7 @@
 class economy:
     """Config for economy functionality"""
 
-    taxAmount = 50
+    taxAmount = 100
     taxTime = 3600
 
     collectTime = 10.0
