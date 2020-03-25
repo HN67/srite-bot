@@ -6,9 +6,10 @@ class economy:
     taxAmount = 100
     taxTime = 3600
 
-    growTimeMin = 10
+    growTimeMin = 180
     growTimeMax = 300
-    growRatio = 0.1 # Number of coins grown per second
+    growMatureTime = 60 # Coins start growing after this time
+    growRatio = 1/24 # Number of coins grown per second (after the mature time)
 
     collectTime = 10.0
 

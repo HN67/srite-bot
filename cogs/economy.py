@@ -195,7 +195,7 @@ class Economy(commands.Cog):
             other = json.load(file)
 
         # Check if funds are available
-        if data["money"] >= amount:
+        if data["money"] >= amount >= 0:
 
             # Add money to other and remove from self
             other["money"] += amount
@@ -389,7 +389,7 @@ class Economy(commands.Cog):
             await asyncio.sleep(sleep)
 
             # Send growth message
-            growth = int(sleep * config.economy.growRatio)
+            growth = int((sleep - config.economy.growMatureTime) * config.economy.growRatio)
             core.debug_info(f"Sprouted {growth} coins")
             # Edit original plant message
             embed.description += " (Sprouted)"
