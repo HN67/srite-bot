@@ -25,12 +25,9 @@ class General(commands.Cog):
         description="Gets the bot to reply with Hello,"
         + "and is used to test a variety of things on backend"
         )
-    async def hello(self, ctx):
+    async def hello(self, ctx: commands.Context):
         '''Replies with simple text'''
-        try:
-            await ctx.send("Hi " + ctx.author.nick)
-        except TypeError:
-            await ctx.send("Hi " + ctx.author.name)
+        await ctx.send("Hi " + ctx.author.display_name)
         core.debug_info("Greeted user", ctx.author.id)
 
     # Eightball command

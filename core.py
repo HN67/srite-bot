@@ -10,20 +10,28 @@ import config
 async def sriteEmoji(guild: discord.Guild):
     """Attempts to return a SriteCoin emoji"""
 
-    for e in guild.emojis:
-        if e.name == "sritecoin":
-            return e
+    try:
+        for e in guild.emojis:
+            if e.name == "sritecoin":
+                return e
+    # Raised if guild is not a real guild, so does not have .emojis,
+    # or somehow an 'emoji' is not a real emoji, has no .name
+    except AttributeError:
+        # Do nothing, let next block try loading emoji
+        pass
 
-    else: #pylint: disable=useless-else-on-loop
-        try:
-            with open("resources/sritecoin.png", "rb") as i:
-                emoji = await guild.create_custom_emoji(
-                    name="sritecoin",
-                    image=i.read()
-                )
-            return emoji
-        except discord.errors.Forbidden:
-            return "SC (No emoji perms)"
+    # Did not find sritecoin emoji
+    try:
+        with open("resources/sritecoin.png", "rb") as i:
+            emoji = await guild.create_custom_emoji(
+                name="sritecoin",
+                image=i.read()
+            )
+        return emoji
+    # Forbidden error if bot is not allowed to create a emoji
+    # Attribute error if guild is a bad type (e.g. None)
+    except (discord.errors.Forbidden, AttributeError) as error:
+        return "SC"
 
 # Returns an embed wrapping the text
 def srite_msg(value: str):
