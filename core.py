@@ -30,7 +30,7 @@ async def sriteEmoji(guild: discord.Guild):
         return emoji
     # Forbidden error if bot is not allowed to create a emoji
     # Attribute error if guild is a bad type (e.g. None)
-    except (discord.errors.Forbidden, AttributeError) as error:
+    except (discord.errors.Forbidden, AttributeError):
         return "SC"
 
 # Returns an embed wrapping the text

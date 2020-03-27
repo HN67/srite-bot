@@ -2,7 +2,6 @@
 
 # Import core libraries
 import random
-import json
 
 # Import discord.py
 import discord
@@ -64,17 +63,6 @@ class General(commands.Cog):
         temp = input("Request for console input: ")
         await ctx.send(temp)
 
-    @commands.command()
-    async def dabs(self, ctx):
-        """Check your total dabs"""
-        with open("data/count.json", "r") as file:
-            count = json.load(file)
-        core.debug_info(count, ctx.author.name)
-        if ctx.author.name in count["dab"]:
-            await ctx.send(f"Total {ctx.author.name} Dabs: {count['dab'][ctx.author.name]}")
-        else:
-            await ctx.send("Congratulations, you have never dabbed")
-
 
     # On message event
     @commands.Cog.listener()
@@ -107,60 +95,6 @@ class General(commands.Cog):
 
             elif text == "hello":
                 await channel.send("owo whats this")
-
-            if "dab" in text:
-                await count_dabs(message)
-
-
-# Function to parse message for dabs
-async def count_dabs(message):
-    """Counts and saves the dabs in a message"""
-
-    # Relable message content
-    text = message.content.lower()
-    # Relable channel
-    channel = message.channel
-    # Relable author
-    author = message.author
-
-    # Load count file
-    with open("data/dabs.json", "r") as file:
-        count = json.load(file)
-
-    # Save original
-    try:
-        original = count["total"]
-    except KeyError:
-        original = 0
-
-    # Increment/Create dab counter
-    core.debug_info(count)
-
-    # Total counter
-    try:
-        count["total"] += text.count("dab")
-    except KeyError:
-        count["total"] = text.count("dab")
-
-    # Individual counter
-    try:
-        count[author.name] += text.count("dab")
-    except KeyError:
-        count[author.name] = text.count("dab")
-
-    # Redump json file
-    with open("data/dabs.json", "w") as file:
-        json.dump(count, file)
-
-    # Display count
-    await channel.send(
-        "```Dab Count: {0}\nLast Dab: {1}```"
-        .format(count["total"], message.author)
-    )
-
-    # Track 1000 milestones
-    if (original//1000) != (count["total"]//1000):
-        await channel.send("Jesus, {} Dabs!".format(count["total"]//1000*1000))
 
 
 # Setup function to load cog
