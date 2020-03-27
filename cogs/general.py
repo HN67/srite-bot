@@ -54,6 +54,22 @@ class General(commands.Cog):
             print("Unexpected error: ")
             print(error)
 
+
+    @commands.command(description="Mocks the message sent directly before this command")
+    async def mock(self, ctx: commands.Context):
+        """Mocks previous message"""
+        # Get previous message
+        previous: discord.Message = (await ctx.channel.history(limit=2).flatten())[1]
+        # ReSend the content but mocked
+        await ctx.send("".join(
+            random.choice((char.upper, char.lower))() for char in previous.content
+        ))
+
+    @commands.command(description="Bans the target user")
+    async def ban(self, ctx: commands.Context, member: discord.Member):
+        """Bans someone"""
+        await core.srite_send(ctx, f"*{member.mention} has been banned.* Cya!")
+
     # Open console command
     @commands.command(hidden=True)
     @commands.is_owner()

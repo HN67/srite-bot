@@ -83,6 +83,7 @@ class Misc(commands.Cog):
             print("Unexpected error: ")
             print(error)
 
+
 # Setup function to add cog
 def setup(bot):
     bot.add_cog(Misc(bot))
