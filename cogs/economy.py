@@ -141,8 +141,6 @@ class Economy(commands.Cog):
     async def economy(self, ctx):
         """Economy command group"""
 
-        await eco_data_validate(ctx.author)
-
         if ctx.invoked_subcommand is None:
             await ctx.send("Specify a economy command")
 
