@@ -79,12 +79,15 @@ async def test(ctx, number: int):
 @commands.is_owner()
 async def reload(ctx: commands.Context):
     """Reloads all extensions"""
-    # Delete message
-    await ctx.message.delete()
-
     # Reload extensions
     core.debug_info("Reloading extensions")
-    handle_extensions(bot.reload_extension)
+    success = handle_extensions(bot.reload_extension)
+
+    # Send confirmation message
+    if success:
+        await core.srite_send(ctx, "Reloaded extensions")
+    else:
+        await core.srite_send(ctx, "At least one extension failed to reload")
 
 
 # Set the cogs which are to be initally loaded
@@ -94,15 +97,20 @@ extensions = [
     "cogs.economy"
 ]
 
-def handle_extensions(handler: Callable[[str], Any]):
-    """Calls the given method on each of the extension strings. Intended to load/etc"""
+def handle_extensions(handler: Callable[[str], Any]) -> bool:
+    """Calls the given method on each of the extension strings. Intended to load/etc
+    Returns False if an exception is thrown when loading any extension, True if none thrown
+    """
+    success = True
     for extension in extensions:
         try:
             handler(extension)
         except Exception as e: #pylint: disable=broad-except
             core.debug_info(f"Failed to use {handler.__name__} on extension {extension}", e)
+            success = False
         else:
             core.debug_info(f"Used {handler.__name__} on extension {extension}")
+    return success
 
 # Turn on bot and load extensions, etc
 if __name__ == "__main__":
