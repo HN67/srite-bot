@@ -1,4 +1,4 @@
-"""Module for managing SriteBot data"""
+"""Module for managing and modeling SriteBot data"""
 
 # Import python libraries
 import random

@@ -17,7 +17,7 @@ from discord.ext import commands
 import core
 import config
 
-from modules import data
+from modules import model
 
 # Validation of user data function
 async def eco_data_validate(member: discord.Member):
@@ -158,7 +158,7 @@ class Economy(commands.Cog):
             user = member
 
         # Message the money retrieved by opening the data
-        with data.User(user).open_economy() as economyData:
+        with model.User(user).open_economy() as economyData:
             await core.srite_send(
                 ctx,
                 f"{user.display_name} has {economyData['money']} {await core.sriteEmoji(ctx.guild)}"
@@ -173,8 +173,8 @@ class Economy(commands.Cog):
         """Command to give other users money"""
 
         # Open both economy datas
-        with data.User(ctx.author).open_economy() as sender:
-            with data.User(member).open_economy() as receiver:
+        with model.User(ctx.author).open_economy() as sender:
+            with model.User(member).open_economy() as receiver:
                 # Check if funds are available
                 if sender["money"] >= amount >= 0:
                     # Add money to other and remove from self
@@ -261,17 +261,21 @@ class Economy(commands.Cog):
 
             await display.edit(embed=embed)
 
-            # Validate author
-            await eco_data_validate(user)
+            # Give money
+            with model.User(user).open_economy() as harvester:
+                harvester["money"] += 1
 
-            # Increase collector money
-            with open(f"data/{user.id}/Economy.json", "r") as file:
-                data = json.load(file)
+            # # Validate author
+            # await eco_data_validate(user)
 
-            data["money"] += 1
+            # # Increase collector money
+            # with open(f"data/{user.id}/Economy.json", "r") as file:
+            #     data = json.load(file)
 
-            with open(f"data/{user.id}/Economy.json", "w") as file:
-                json.dump(data, file)
+            # data["money"] += 1
+
+            # with open(f"data/{user.id}/Economy.json", "w") as file:
+            #     json.dump(data, file)
 
         core.debug_info("Out of hash loop", len(display_string))
         await display.delete()
@@ -281,43 +285,36 @@ class Economy(commands.Cog):
     async def tax(self, ctx):
         """Command to collect periodic tax"""
 
-        # Save file path to clean code
-        ecoFile = "data/{}/Economy.json".format(ctx.author.id)
-
-        # Check last acsessed time to see if it was less than an hour ago
-        with open(ecoFile, "r") as file:
-            data = json.load(file)
-
-        core.debug_info(data)
+        # Compare time and previous time
         current = time.time()
-        diff = datetime.timedelta(seconds=(current - data["taxTime"]))
-        core.debug_info(current, data["taxTime"], diff, diff.seconds)
-        # Check if last tax was an hour ago to determine whether it is to soon
-        if (diff.days*86400 + diff.seconds) >= config.economy.taxTime:
 
-            # Add money to user bank
-            data["money"] += config.economy.taxAmount
+        with model.User(ctx.author).open_economy() as data:
+            # Calculate time diff
+            diff = datetime.timedelta(seconds=(current - data["taxTime"]))
+            core.debug_info(current, data["taxTime"], diff, diff.seconds)
+            
+            # Check if last tax was an hour ago to determine whether it is to soon
+            if (diff.days*86400 + diff.seconds) >= config.economy.taxTime:
 
-            # Save current time
-            data["taxTime"] = current
+                # Add money to user bank
+                data["money"] += config.economy.taxAmount
 
-            # Resave data
-            with open(ecoFile, "w") as file:
-                json.dump(data, file)
+                # Save current time
+                data["taxTime"] = current
 
-            # Send confirmation to show sucsess
-            await ctx.send(embed=core.srite_msg("Collected tax of {0} {1}".format(
-                config.economy.taxAmount, await core.sriteEmoji(ctx.guild)
-            )))
+                # Send confirmation to show sucsess
+                await ctx.send(embed=core.srite_msg("Collected tax of {0} {1}".format(
+                    config.economy.taxAmount, await core.sriteEmoji(ctx.guild)
+                )))
 
-        else:
-            # Show error message that will tell user how long they need to wait
-            cooldown = datetime.timedelta(seconds=config.economy.taxTime)
-            rem = cooldown - diff
-            # Send message
-            await ctx.send(embed=core.srite_msg(
-                f"{rem} remaining before you can tax again"
-            ))
+            else:
+                # Show error message that will tell user how long they need to wait
+                cooldown = datetime.timedelta(seconds=config.economy.taxTime)
+                rem = cooldown - diff
+                # Send message
+                await ctx.send(embed=core.srite_msg(
+                    f"{rem} remaining before you can tax again"
+                ))
 
     # Plant command
     @economy.command(
