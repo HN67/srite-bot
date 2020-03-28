@@ -292,7 +292,7 @@ class Economy(commands.Cog):
             # Calculate time diff
             diff = datetime.timedelta(seconds=(current - data["taxTime"]))
             core.debug_info(current, data["taxTime"], diff, diff.seconds)
-            
+
             # Check if last tax was an hour ago to determine whether it is to soon
             if (diff.days*86400 + diff.seconds) >= config.economy.taxTime:
 
@@ -325,30 +325,32 @@ class Economy(commands.Cog):
         """Plants a SriteCoin in the context channel"""
 
         # Load caller economy data
-        economyPath = f"data/{ctx.author.id}/Economy.json"
+        with model.User(ctx.author).open_economy() as eco:
 
-        with open(economyPath, "r") as file:
-            eco = json.load(file)
+            # Check if the caller has a coin to plant
+            if not eco["money"] > 0:
+                # Show "error" message
+                await core.srite_send(
+                    ctx,
+                    f"You have no {await core.sriteEmoji(ctx.guild)} to plant"
+                )
 
-        # Check if the caller has a coin to plant
-        if not eco["money"] > 0:
-            # Show "error" message
-            await core.srite_send(ctx, f"You have no {await core.sriteEmoji(ctx.guild)} to plant")
+                planted = False
 
-        else:
-            # Save emoji to prevent repeated reloading
-            emoji = await core.sriteEmoji(ctx.guild)
+            else:
+                # Save emoji to prevent repeated reloading
+                emoji = await core.sriteEmoji(ctx.guild)
 
-            # Show success message
-            embed = core.srite_msg(f"Planted a {emoji}")
-            plant = await ctx.send(embed=embed)
+                # Show success message
+                embed = core.srite_msg(f"Planted a {emoji}")
+                plant = await ctx.send(embed=embed)
 
-            # Remove coin
-            eco["money"] -= 1
+                # Remove coin
+                eco["money"] -= 1
 
-            # Save caller eco data
-            with open(economyPath, "w") as file:
-                json.dump(eco, file)
+                planted = True
+
+        if planted:
 
             # Wait random number of seconds within config range
             sleep = random.randint(config.economy.growTimeMin, config.economy.growTimeMax)
@@ -385,18 +387,9 @@ class Economy(commands.Cog):
             await notification.delete()
             #await message.delete()
 
-            # Eco validate collector
-            await eco_data_validate(message.author)
-
             # Increase collector money
-            economyPath = f"data/{message.author.id}/Economy.json"
-            with open(economyPath, "r") as file:
-                eco = json.load(file)
-
-            eco["money"] += growth
-
-            with open(economyPath, "w") as file:
-                json.dump(eco, file)
+            with model.User(message.author).open_economy() as eco:
+                eco["money"] += growth
 
 
     ### Stocks area
