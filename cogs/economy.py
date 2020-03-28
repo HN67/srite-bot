@@ -17,6 +17,8 @@ from discord.ext import commands
 import core
 import config
 
+from modules import data
+
 # Validation of user data function
 async def eco_data_validate(member: discord.Member):
     """Validates and creates a user's economy data if needed"""
@@ -155,76 +157,44 @@ class Economy(commands.Cog):
         else:
             user = member
 
-        # Save path for cleaner code
-        ecoFile = "data/{}/Economy.json".format(user.id)
-
-        # Get data
-        with open(ecoFile, "r") as file:
-            data = json.load(file)
+        # Message the money retrieved by opening the data
+        with data.User(user).open_economy() as economyData:
+            await core.srite_send(
+                ctx,
+                f"{user.display_name} has {economyData['money']} {await core.sriteEmoji(ctx.guild)}"
+            )
 
         # Debug info
         core.debug_info(ctx.author.name, ctx.guild, await core.sriteEmoji(ctx.guild))
-
-        # Send message on money amount
-        # Create embed
-        embed = discord.Embed(
-            color=0x016681, #00A229
-            description="{0} has {1} {2}".format(
-                user.display_name,
-                data["money"],
-                await core.sriteEmoji(ctx.guild)
-            )
-        )
-        # Send message with embed
-        await ctx.send(embed=embed)
 
 
     @economy.command()
     async def give(self, ctx, member: discord.Member, amount: int):
         """Command to give other users money"""
 
-        # Validate receiver
-        await eco_data_validate(member)
+        # Open both economy datas
+        with data.User(ctx.author).open_economy() as sender:
+            with data.User(member).open_economy() as receiver:
+                # Check if funds are available
+                if sender["money"] >= amount >= 0:
+                    # Add money to other and remove from self
+                    receiver["money"] += amount
+                    sender["money"] -= amount
 
-        # Pull sender date for later use
-        with open("data/{}/Economy.json".format(ctx.author.id)) as file:
-            data = json.load(file)
-
-        # Get data of receiver
-        with open("data/{}/Economy.json".format(member.id)) as file:
-            other = json.load(file)
-
-        # Check if funds are available
-        if data["money"] >= amount >= 0:
-
-            # Add money to other and remove from self
-            other["money"] += amount
-            data["money"] -= amount
-
-            # Send confirmation message
-            await ctx.send(
-                embed=core.srite_msg("{0} sent {2} {3} to {1}".format(
-                    ctx.author.display_name,
-                    member.display_name,
-                    amount,
-                    await core.sriteEmoji(ctx.guild),
-                ))
-            )
-
-            core.debug_info(data, other)
-            # Resave data
-            with open("data/{}/Economy.json".format(ctx.author.id), "w") as file:
-                json.dump(data, file)
-
-            with open("data/{}/Economy.json".format(member.id), "w") as file:
-                json.dump(other, file)
-
-        else:
-
-            # Send error message to say there are not enough money
-            await ctx.send(embed=core.srite_msg("Not enough {}".format(
-                await core.sriteEmoji(ctx.guild)
-            )))
+                    # Send confirmation message
+                    await ctx.send(
+                        embed=core.srite_msg("{0} sent {2} {3} to {1}".format(
+                            ctx.author.display_name,
+                            member.display_name,
+                            amount,
+                            await core.sriteEmoji(ctx.guild),
+                        ))
+                    )
+                else:
+                    # Send error message to say there are not enough money
+                    await ctx.send(embed=core.srite_msg("Not enough {}".format(
+                        await core.sriteEmoji(ctx.guild)
+                    )))
 
 
     # Hash command
