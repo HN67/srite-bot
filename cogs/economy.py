@@ -279,7 +279,7 @@ class Economy(commands.Cog):
         await display.delete()
 
     # Tax command
-    @economy.command()
+    @economy.command(aliases=["t"])
     async def tax(self, ctx):
         """Command to collect periodic tax"""
 
@@ -415,16 +415,15 @@ class Economy(commands.Cog):
         # Create embed
         embed = discord.Embed(color=config.bot.color, title="Market")
 
-        # Load stocks
-        with open("data/stocks.json", "r") as file:
-            stocks = json.load(file)
+        # Populate embed
+        with model.Stocks().open() as stocks:
+            # Add field for each stock
+            for stock in stocks:
+                embed.add_field(name=stock, value=stocks[stock])
 
-        # Add fields for each stock
-        for stock in stocks:
-            embed.add_field(name=stock, value=stocks[stock])
-
-        # Send ebed
+        # Send embed
         await ctx.send(embed=embed)
+
 
     @stocks.command(aliases=["p", "port", "stocks"])
     async def portfolio(self, ctx, member: discord.Member = None):
@@ -448,38 +447,42 @@ class Economy(commands.Cog):
             title=f"{member.display_name} stocks"
         )
 
-        # Init total value var
-        totalValue = 0
+        # Populate embed
+        with model.User(member).open_economy() as data:
+            with model.Stocks().open() as stocks:
 
-        # Iterate through all stocks
-        for stock, amount in data["stocks"].items():
+                # Init total value var
+                totalValue = 0
 
-            # Only show if the user has some of the stock
-            if amount > 0:
-                # Calculate value
-                value = amount*stocks[stock]
+                # Iterate through all stocks
+                for stock, amount in data["stocks"].items():
 
-                # Add field
+                    # Only show if the user has some of the stock
+                    if amount > 0:
+                        # Calculate value
+                        value = amount*stocks[stock]
+
+                        # Add field
+                        embed.add_field(
+                            name=stock,
+                            value="{0} x ({1} {2}) = {3} {2}".format(
+                                amount, stocks[stock],
+                                await core.sriteEmoji(ctx.guild),
+                                value
+                            )
+                        )
+
+                        # Increase total value
+                        totalValue += value
+
+                # Add total value field
                 embed.add_field(
-                    name=stock,
-                    value="{0} x ({1} {2}) = {3} {2}".format(
-                        amount, stocks[stock],
-                        await core.sriteEmoji(ctx.guild),
-                        value
+                    name="Total Value",
+                    value="{0} {1}".format(
+                        totalValue,
+                        await core.sriteEmoji(ctx.guild)
                     )
                 )
-
-                # Increase total value
-                totalValue += value
-
-        # Add total value field
-        embed.add_field(
-            name="Total Value",
-            value="{0} {1}".format(
-                totalValue,
-                await core.sriteEmoji(ctx.guild)
-            )
-        )
 
         # Send message
         await ctx.send(embed=embed)
