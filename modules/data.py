@@ -1,8 +1,10 @@
 """Module for managing SriteBot data"""
 
 # Import python libraries
+import random
 import json
 from pathlib import Path
+from contextlib import contextmanager
 
 # Import discord
 import discord
@@ -21,6 +23,8 @@ class User:
         self.user: discord.User = user
         self.id: int = self.user.id # User ID
         self.path: str = data_path(str(self.id)) # User Data Folder Path
+        self.infoPath: str = self.location("Info.json")
+        self.economyPath: str = self.location("Economy.json")
 
     def location(self, path: object) -> str:
         """Appends the given path to this User's data folder"""
@@ -33,7 +37,7 @@ class User:
             Path(self.path).mkdir()
 
         # Update info file
-        with open(self.location("info.json"), "w") as file:
+        with open(self.infoPath, "w") as file:
             json.dump({"id": self.id, "name": self.user.name}, file)
 
     def verify_economy(self) -> None:
@@ -44,7 +48,7 @@ class User:
         # Try loading the existing file
         economyData = {}
         try:
-            with open(self.location("economy.json"), "r") as file:
+            with open(self.economyPath, "r") as file:
                 economyData = json.load(file)
         except FileNotFoundError:
             pass
@@ -70,8 +74,77 @@ class User:
         # Repack stock data
         economyData["stocks"] = stockData
         # Save economy data
-        with open(self.location("economy.json"), "w") as file:
+        with open(self.economyPath, "w") as file:
             json.dump(economyData, file)
 
+    @contextmanager
+    def open_economy(self):
+        """Allows manipulation of economy data within the context"""
+        # Verify data
+        self.verify_economy()
+        # Load data
+        data = {}
+        with open(self.economyPath, "r") as file:
+            data = json.load(file)
+        try:
+            # Yield data
+            yield data
+        finally:
+            # Resave data
+            with open(self.economyPath, "w") as file:
+                json.dump(data, file)
+
 class Stocks:
-    """Represents SriteBot stock data"""
+    """Represents SriteBot stock data. Every instance references the same data."""
+
+    def __init__(self):
+        self.path: str = data_path("stocks.json")
+
+    def verify(self) -> None:
+        """Verifies the disc datastructure integrity for stocks"""
+        # Try loading the existing file
+        stockData = {}
+        try:
+            with open(self.path, "r") as file:
+                stockData = json.load(file)
+        except FileNotFoundError:
+            pass
+
+        # Verify stock keys from config
+        for stock in config.stocks.items:
+            if stock not in stockData:
+                stockData[stock] = config.stocks.standard
+
+        # Resave stock data
+        with open(self.path, "w") as file:
+            json.dump(stockData, file)
+
+    @contextmanager
+    def open(self):
+        """Allows manipulation of stock data within the context"""
+        # Verify data
+        self.verify()
+        # Load data
+        data = {}
+        with open(self.path, "r") as file:
+            data = json.load(file)
+        try:
+            # Yield data
+            yield data
+        finally:
+            # Resave data
+            with open(self.path, "w") as file:
+                json.dump(data, file)
+
+    def update(self) -> None:
+        """Performs the periodic stock update using config data"""
+        # Verify stock data
+        self.verify()
+
+        # Update data
+        with self.open() as data:
+            for stock in data:
+                data[stock] += random.randint(
+                    -config.stocks.change,
+                    config.stocks.change
+                )
