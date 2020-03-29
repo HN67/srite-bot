@@ -5,6 +5,7 @@ import random
 import json
 from pathlib import Path
 from contextlib import contextmanager
+from typing import Generator
 
 # Import discord
 import discord
@@ -12,17 +13,19 @@ import discord
 # Import config
 import config
 
+
 def data_path(path: object) -> str:
     """Returns a path to the data folder with the given path appended (in str form)"""
     return f"data/{path}"
 
+
 class User:
     """Represents SriteBot user data for a specific user"""
 
-    def __init__(self, user: discord.User):
+    def __init__(self, user: discord.User) -> None:
         self.user: discord.User = user
-        self.id: int = self.user.id # User ID
-        self.path: str = data_path(str(self.id)) # User Data Folder Path
+        self.id: int = self.user.id  # User ID
+        self.path: str = data_path(str(self.id))  # User Data Folder Path
         self.infoPath: str = self.location("Info.json")
         self.economyPath: str = self.location("Economy.json")
 
@@ -78,7 +81,7 @@ class User:
             json.dump(economyData, file)
 
     @contextmanager
-    def open_economy(self):
+    def open_economy(self) -> Generator[dict, None, None]:
         """Allows manipulation of economy data within the context"""
         # Verify data
         self.verify_economy()
@@ -94,10 +97,11 @@ class User:
             with open(self.economyPath, "w") as file:
                 json.dump(data, file)
 
+
 class Stocks:
     """Represents SriteBot stock data. Every instance references the same data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.path: str = data_path("stocks.json")
 
     def verify(self) -> None:

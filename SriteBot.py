@@ -31,7 +31,7 @@ bot = commands.Bot(command_prefix=config.bot.prefixes,
 
 # Event that fires once the bot is fully logged in
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     """Callback run once bot is fully logged in"""
 
     # Print login information
@@ -54,7 +54,7 @@ async def on_ready():
 
 # Event that fires every message that the bot can see
 @bot.event
-async def on_message(message):
+async def on_message(message: str) -> None:
     """Callback run whenever a messege is sent"""
 
     # Process commands module commands
@@ -63,21 +63,21 @@ async def on_message(message):
 
 # Ping command
 @bot.command()
-async def ping(ctx):
+async def ping(ctx: commands.Context) -> None:
     """Ping command to test bot connectivity"""
     await ctx.send(embed=core.srite_msg("pong"))
 
 
 # Test command for various things
 @bot.command()
-async def test(ctx, number: int):
+async def test(ctx: commands.Context, number: int) -> None:
     """Test command to test various features"""
     await core.srite_send(ctx.channel, str(number + 1))
 
 
 @bot.command(hidden=True)
 @commands.is_owner()
-async def reload(ctx: commands.Context):
+async def reload(ctx: commands.Context) -> None:
     """Reloads all extensions"""
     # Reload extensions
     core.debug_info("Reloading extensions")
@@ -97,6 +97,7 @@ extensions = [
     "cogs.economy"
 ]
 
+
 def handle_extensions(handler: Callable[[str], Any]) -> bool:
     """Calls the given method on each of the extension strings. Intended to load/etc
     Returns False if an exception is thrown when loading any extension, True if none thrown
@@ -105,12 +106,13 @@ def handle_extensions(handler: Callable[[str], Any]) -> bool:
     for extension in extensions:
         try:
             handler(extension)
-        except Exception as e: #pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             core.debug_info(f"Failed to use {handler.__name__} on extension {extension}", e)
             success = False
         else:
             core.debug_info(f"Used {handler.__name__} on extension {extension}")
     return success
+
 
 # Turn on bot and load extensions, etc
 if __name__ == "__main__":

@@ -6,8 +6,9 @@ import discord
 # Import config
 import config
 
+
 # Makes sure the guild is equipped to deal with economy (e.g. emoji)
-async def sriteEmoji(guild: discord.Guild):
+async def sriteEmoji(guild: discord.Guild) -> discord.Emoji:
     """Attempts to return a SriteCoin emoji"""
 
     try:
@@ -33,18 +34,21 @@ async def sriteEmoji(guild: discord.Guild):
     except (discord.errors.Forbidden, AttributeError):
         return "SC"
 
+
 # Returns an embed wrapping the text
-def srite_msg(value: str):
+def srite_msg(value: str) -> discord.Embed:
     """Returns a customized embed with the given message"""
     return discord.Embed(color=config.bot.color, description=value)
 
+
 # Sends an embedded msg to channel
-async def srite_send(channel: discord.abc.Messageable, message: str):
+async def srite_send(channel: discord.abc.Messageable, message: str) -> None:
     """Sends the message as an embed"""
     return await channel.send(embed=srite_msg(message))
 
+
 # Debug method
-def debug_info(*messages):
+def debug_info(*messages: object) -> None:
     '''Function for printing seperate information chunks'''
     # Prints each debug in the var-arg
     for line in messages:

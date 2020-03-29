@@ -1,5 +1,6 @@
 """Config file for srite bot"""
 
+
 class economy:
     """Config for economy functionality"""
 
@@ -8,8 +9,8 @@ class economy:
 
     growTimeMin = 180
     growTimeMax = 300
-    growMatureTime = 60 # Coins start growing after this time
-    growRatio = 1/24 # Number of coins grown per second (after the mature time)
+    growMatureTime = 60  # Coins start growing after this time
+    growRatio = 1/24  # Number of coins grown per second (after the mature time)
 
     collectTime = 10.0
 
@@ -17,12 +18,14 @@ class economy:
 
     hashLength = 100
 
+
 class bot:
     """Config for core bot"""
 
     color = 0x00A229
 
     prefixes = ("s.", "s:")
+
 
 class stocks:
     """Config for stocks functionality"""
@@ -49,6 +52,7 @@ class stocks:
 
     updateFrequency = 300
 
+
 class time:
     """Time configs"""
 
@@ -59,7 +63,7 @@ class time:
 class uni:
     """Unicode aliases"""
 
-    leftArrow = "\u2B05"#"\u21E6"
+    leftArrow = "\u2B05"  # "\u21E6"
     upArrow = "\u2B06"
-    rightArrow = "\u27A1"#"\u27A1"
-    downArrow = "\u2B07"#"\u21E9"
+    rightArrow = "\u27A1"  # "\u27A1"
+    downArrow = "\u2B07"  # "\u21E9"

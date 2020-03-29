@@ -488,7 +488,7 @@ class Economy(commands.Cog):
         await ctx.send(embed=embed)
 
     @stocks.command(aliases=["b"])
-    async def buy(self, ctx, stock, amount: int = 1):
+    async def buy(self, ctx: commands.Context, stock: str, amount: int = 1):
         """Command to buy stocks"""
 
         # Load stocks
