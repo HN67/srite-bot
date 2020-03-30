@@ -124,7 +124,7 @@ class Stocks:
             json.dump(stockData, file)
 
     @contextmanager
-    def open(self):
+    def open(self) -> Generator[dict, None, None]:
         """Allows manipulation of stock data within the context"""
         # Verify data
         self.verify()

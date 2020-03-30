@@ -19,8 +19,9 @@ import config
 
 from modules import model
 
+
 # Validation of user data function
-async def eco_data_validate(member: discord.Member):
+async def eco_data_validate(member: discord.Member) -> None:
     """Validates and creates a user's economy data if needed"""
 
     # Check that path exists
@@ -60,7 +61,7 @@ async def eco_data_validate(member: discord.Member):
                 economy[key] = 0
 
         # Validate stock key
-        if not "stocks" in economy:
+        if "stocks" not in economy:
             # Create stocks tracker
             economy["stocks"] = {k: 0 for k in config.stocks.items}
         else:
@@ -73,8 +74,9 @@ async def eco_data_validate(member: discord.Member):
     with open("data/{}/Economy.json".format(member.id), "w") as file:
         json.dump(economy, file)
 
+
 # Validate stock file
-async def validate_stocks():
+async def validate_stocks() -> None:
     """Validates the stocks file"""
 
     stocks = config.stocks.items
@@ -104,8 +106,9 @@ async def validate_stocks():
     with open("data/stocks.json", "w") as file:
         json.dump(data, file)
 
+
 # Function to change stock value
-async def update_stocks():
+async def update_stocks() -> None:
     """Updates the stocks"""
 
     # Ensure that all stocks have been initialized
@@ -125,6 +128,7 @@ async def update_stocks():
     with open("data/stocks.json", "w") as file:
         json.dump(stocks, file)
 
+
 class Economy(commands.Cog):
     """SriteBot Economy Cog"""
 
@@ -138,15 +142,14 @@ class Economy(commands.Cog):
         description="Header for eco related commands",
         aliases=["eco", "e"]
     )
-    async def economy(self, ctx):
+    async def economy(self, ctx: commands.Context) -> None:
         """Economy command group"""
 
         if ctx.invoked_subcommand is None:
             await ctx.send("Specify a economy command")
 
-
     @economy.command(aliases=["m", "$"])
-    async def money(self, ctx, member: discord.Member = None):
+    async def money(self, ctx: commands.Context, member: discord.Member = None) -> None:
         """Command to show money"""
 
         # Choose user to allow varied command use
@@ -165,9 +168,8 @@ class Economy(commands.Cog):
         # Debug info
         core.debug_info(ctx.author.name, ctx.guild, await core.sriteEmoji(ctx.guild))
 
-
     @economy.command()
-    async def give(self, ctx, member: discord.Member, amount: int):
+    async def give(self, ctx: commands.Context, member: discord.Member, amount: int) -> None:
         """Command to give other users money"""
 
         # Open both economy datas
@@ -194,10 +196,9 @@ class Economy(commands.Cog):
                         await core.sriteEmoji(ctx.guild)
                     )))
 
-
     # Hash command
     @economy.command(aliases=["h"])
-    async def hash(self, ctx):
+    async def hash(self, ctx: commands.Context) -> None:
         """Command to start hash"""
 
         # Create list of arrows
@@ -226,14 +227,14 @@ class Economy(commands.Cog):
             await display.add_reaction(arrows[i])
 
         # Define the predicate
-        def check(reaction, user):
+        def check(reaction: discord.Reaction, user: discord.User) -> bool:
             return (
                 reaction.message.id == display.id
                 and user != self.bot.user
             )
 
         # While the hash still exists
-        while len(display_string) > 0: #pylint: disable=len-as-condition
+        while len(display_string) > 0:  # pylint: disable=len-as-condition
 
             core.debug_info("Next char:", display_string[0])
 
@@ -280,7 +281,7 @@ class Economy(commands.Cog):
 
     # Tax command
     @economy.command(aliases=["t"])
-    async def tax(self, ctx):
+    async def tax(self, ctx: commands.Context) -> None:
         """Command to collect periodic tax"""
 
         # Compare time and previous time
@@ -319,7 +320,7 @@ class Economy(commands.Cog):
         aliases=["p"],
         description="First user to pick the coins keeps them"
     )
-    async def plant(self, ctx: commands.Context):
+    async def plant(self, ctx: commands.Context) -> None:
         """Plants a SriteCoin in the context channel"""
 
         # Load caller economy data
@@ -383,18 +384,15 @@ class Economy(commands.Cog):
             )
             # Delete notification message to reduce channel clutter
             await notification.delete()
-            #await message.delete()
 
             # Increase collector money
             with model.User(message.author).open_economy() as eco:
                 eco["money"] += growth
 
-
-    ### Stocks area
-
+    # Stocks area
     # Stocks group
     @commands.group(aliases=["s"], description="Buy and sell srite stocks")
-    async def stocks(self, ctx):
+    async def stocks(self, ctx: commands.Context) -> None:
         """Stocks command group"""
 
         # Validate authors economy since stocks are
@@ -407,9 +405,8 @@ class Economy(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("Specify a stock command")
 
-
     @stocks.command(aliases=["m"])
-    async def market(self, ctx):
+    async def market(self, ctx: commands.Context) -> None:
         """View current value of stocks"""
 
         # Create embed
@@ -424,9 +421,8 @@ class Economy(commands.Cog):
         # Send embed
         await ctx.send(embed=embed)
 
-
     @stocks.command(aliases=["p", "port", "stocks"])
-    async def portfolio(self, ctx, member: discord.Member = None):
+    async def portfolio(self, ctx: commands.Context, member: discord.Member = None) -> None:
         """View portfolio of user"""
 
         # Check member to function on
@@ -488,7 +484,7 @@ class Economy(commands.Cog):
         await ctx.send(embed=embed)
 
     @stocks.command(aliases=["b"])
-    async def buy(self, ctx: commands.Context, stock: str, amount: int = 1):
+    async def buy(self, ctx: commands.Context, stock: str, amount: int = 1) -> None:
         """Command to buy stocks"""
 
         # Load stocks
@@ -545,9 +541,8 @@ class Economy(commands.Cog):
                 embed=core.srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks")
             )
 
-
     @stocks.command(aliases=["s"])
-    async def sell(self, ctx, stock, amount: int = 1):
+    async def sell(self, ctx: commands.Context, stock: str, amount: int = 1) -> None:
         """Command to sell stocks"""
 
         # Load stocks
@@ -603,18 +598,16 @@ class Economy(commands.Cog):
                 embed=core.srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks")
             )
 
-
     @stocks.command(hidden=True, aliases=["u"])
     @commands.is_owner()
-    async def update(self, ctx):
+    async def update(self, ctx: commands.Context) -> None:
         """Command to update the stock market"""
         await update_stocks()
         await ctx.send(embed=core.srite_msg("Updated Stocks"))
 
-
     # Extend on_ready to track stocks
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         """Bot on ready listener"""
 
         core.debug_info("Economy startup")
@@ -624,9 +617,8 @@ class Economy(commands.Cog):
 
         core.debug_info("Finished economy setup")
 
-
     # Function designed to be added to the bot as a background task
-    async def track_stocks(self):
+    async def track_stocks(self) -> None:
         """Background task for tracking bot stocks"""
 
         # Run continuosly during bot operation
@@ -638,6 +630,6 @@ class Economy(commands.Cog):
 
 
 # Function to add cog
-def setup(bot):
+def setup(bot: commands.Bot) -> None:
     """Loads economy cog"""
     bot.add_cog(Economy(bot))

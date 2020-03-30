@@ -42,7 +42,7 @@ def srite_msg(value: str) -> discord.Embed:
 
 
 # Sends an embedded msg to channel
-async def srite_send(channel: discord.abc.Messageable, message: str) -> None:
+async def srite_send(channel: discord.abc.Messageable, message: str) -> discord.Message:
     """Sends the message as an embed"""
     return await channel.send(embed=srite_msg(message))
 
