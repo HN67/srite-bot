@@ -54,7 +54,7 @@ async def on_ready() -> None:
 
 # Event that fires every message that the bot can see
 @bot.event
-async def on_message(message: str) -> None:
+async def on_message(message: discord.Message) -> None:
     """Callback run whenever a messege is sent"""
 
     # Process commands module commands
@@ -94,7 +94,7 @@ async def reload(ctx: commands.Context) -> None:
 extensions = [
     "cogs.memes", "cogs.misc",
     "cogs.general", "cogs.timing",
-    "cogs.economy"
+    "cogs.economy",  # "cogs.fools",
 ]
 
 

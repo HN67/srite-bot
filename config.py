@@ -67,3 +67,9 @@ class uni:
     upArrow = "\u2B06"
     rightArrow = "\u27A1"  # "\u27A1"
     downArrow = "\u2B07"  # "\u21E9"
+
+
+class fools:
+    """Config for april fools features"""
+
+    channels = [271124181372895242]
