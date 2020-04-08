@@ -94,7 +94,7 @@ async def reload(ctx: commands.Context) -> None:
 extensions = [
     "cogs.memes", "cogs.misc",
     "cogs.general", "cogs.timing",
-    "cogs.economy",  # "cogs.fools",
+    "cogs.economy", "cogs.moderation",
 ]
 
 
