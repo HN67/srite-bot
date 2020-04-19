@@ -121,8 +121,7 @@ async def update_stocks() -> None:
     # Update stocks
     for stock in stocks:
 
-        stocks[stock] += random.randint(-1 * config.stocks.change,
-                                        config.stocks.change)
+        stocks[stock] += random.randint(-1 * config.stocks.change, config.stocks.change)
 
     # Resave stocks
     with open("data/stocks.json", "w") as file:
@@ -140,7 +139,7 @@ class Economy(commands.Cog):
     @commands.group(
         pass_context=True,
         description="Header for eco related commands",
-        aliases=["eco", "e"]
+        aliases=["eco", "e"],
     )
     async def economy(self, ctx: commands.Context) -> None:
         """Economy command group"""
@@ -162,14 +161,20 @@ class Economy(commands.Cog):
         with model.User(user).open_economy() as economyData:
             await core.srite_send(
                 ctx,
-                f"{user.display_name} has {economyData['money']} {await core.sriteEmoji(ctx.guild)}"
+                f"""
+                    {user.display_name}
+                    has {economyData['money']}
+                    {await core.sriteEmoji(ctx.guild)}
+                """,
             )
 
         # Debug info
         core.debug_info(ctx.author.name, ctx.guild, await core.sriteEmoji(ctx.guild))
 
     @economy.command()
-    async def give(self, ctx: commands.Context, member: discord.Member, amount: int) -> None:
+    async def give(
+        self, ctx: commands.Context, member: discord.Member, amount: int
+    ) -> None:
         """Command to give other users money"""
 
         # Open both economy datas
@@ -183,18 +188,22 @@ class Economy(commands.Cog):
 
                     # Send confirmation message
                     await ctx.send(
-                        embed=core.srite_msg("{0} sent {2} {3} to {1}".format(
-                            ctx.author.display_name,
-                            member.display_name,
-                            amount,
-                            await core.sriteEmoji(ctx.guild),
-                        ))
+                        embed=core.srite_msg(
+                            "{0} sent {2} {3} to {1}".format(
+                                ctx.author.display_name,
+                                member.display_name,
+                                amount,
+                                await core.sriteEmoji(ctx.guild),
+                            )
+                        )
                     )
                 else:
                     # Send error message to say there are not enough money
-                    await ctx.send(embed=core.srite_msg("Not enough {}".format(
-                        await core.sriteEmoji(ctx.guild)
-                    )))
+                    await ctx.send(
+                        embed=core.srite_msg(
+                            "Not enough {}".format(await core.sriteEmoji(ctx.guild))
+                        )
+                    )
 
     # Hash command
     @economy.command(aliases=["h"])
@@ -202,10 +211,12 @@ class Economy(commands.Cog):
         """Command to start hash"""
 
         # Create list of arrows
-        arrows = [config.uni.leftArrow,
-                  config.uni.upArrow,
-                  config.uni.downArrow,
-                  config.uni.rightArrow]
+        arrows = [
+            config.uni.leftArrow,
+            config.uni.upArrow,
+            config.uni.downArrow,
+            config.uni.rightArrow,
+        ]
 
         # Create string of numbers for user to reply
         string = []
@@ -216,9 +227,9 @@ class Economy(commands.Cog):
         display_string = "".join((arrows[i] for i in string))
 
         # Display string
-        embed = discord.Embed(color=config.bot.color,
-                              title="Hash",
-                              description=display_string)
+        embed = discord.Embed(
+            color=config.bot.color, title="Hash", description=display_string
+        )
         embed.add_field(name="Last Harvest", value="None")
         display = await ctx.send(embed=embed)
 
@@ -228,10 +239,7 @@ class Economy(commands.Cog):
 
         # Define the predicate
         def check(reaction: discord.Reaction, user: discord.User) -> bool:
-            return (
-                reaction.message.id == display.id
-                and user != self.bot.user
-            )
+            return reaction.message.id == display.id and user != self.bot.user
 
         # While the hash still exists
         while len(display_string) > 0:  # pylint: disable=len-as-condition
@@ -255,8 +263,11 @@ class Economy(commands.Cog):
             # Update display string
             emoji = await core.sriteEmoji(display.guild)
             embed.description = display_string
-            embed.set_field_at(0, name="Last Harvest",
-                               value=f"{rxn.emoji} by {user.display_name} for 1 {emoji}")
+            embed.set_field_at(
+                0,
+                name="Last Harvest",
+                value=f"{rxn.emoji} by {user.display_name} for 1 {emoji}",
+            )
 
             await display.edit(embed=embed)
 
@@ -293,7 +304,7 @@ class Economy(commands.Cog):
             core.debug_info(current, data["taxTime"], diff, diff.seconds)
 
             # Check if last tax was an hour ago to determine whether it is to soon
-            if (diff.days*86400 + diff.seconds) >= config.economy.taxTime:
+            if (diff.days * 86400 + diff.seconds) >= config.economy.taxTime:
 
                 # Add money to user bank
                 data["money"] += config.economy.taxAmount
@@ -302,23 +313,26 @@ class Economy(commands.Cog):
                 data["taxTime"] = current
 
                 # Send confirmation to show sucsess
-                await ctx.send(embed=core.srite_msg("Collected tax of {0} {1}".format(
-                    config.economy.taxAmount, await core.sriteEmoji(ctx.guild)
-                )))
+                await ctx.send(
+                    embed=core.srite_msg(
+                        "Collected tax of {0} {1}".format(
+                            config.economy.taxAmount, await core.sriteEmoji(ctx.guild)
+                        )
+                    )
+                )
 
             else:
                 # Show error message that will tell user how long they need to wait
                 cooldown = datetime.timedelta(seconds=config.economy.taxTime)
                 rem = cooldown - diff
                 # Send message
-                await ctx.send(embed=core.srite_msg(
-                    f"{rem} remaining before you can tax again"
-                ))
+                await ctx.send(
+                    embed=core.srite_msg(f"{rem} remaining before you can tax again")
+                )
 
     # Plant command
     @economy.command(
-        aliases=["p"],
-        description="First user to pick the coins keeps them"
+        aliases=["p"], description="First user to pick the coins keeps them"
     )
     async def plant(self, ctx: commands.Context) -> None:
         """Plants a SriteCoin in the context channel"""
@@ -330,8 +344,7 @@ class Economy(commands.Cog):
             if not eco["money"] > 0:
                 # Show "error" message
                 await core.srite_send(
-                    ctx,
-                    f"You have no {await core.sriteEmoji(ctx.guild)} to plant"
+                    ctx, f"You have no {await core.sriteEmoji(ctx.guild)} to plant"
                 )
 
                 planted = False
@@ -352,12 +365,16 @@ class Economy(commands.Cog):
         if planted:
 
             # Wait random number of seconds within config range
-            sleep = random.randint(config.economy.growTimeMin, config.economy.growTimeMax)
+            sleep = random.randint(
+                config.economy.growTimeMin, config.economy.growTimeMax
+            )
             core.debug_info(f"Planting coin from {ctx.author} for {sleep} seconds")
             await asyncio.sleep(sleep)
 
             # Send growth message
-            growth = int((sleep - config.economy.growMatureTime) * config.economy.growRatio)
+            growth = int(
+                (sleep - config.economy.growMatureTime) * config.economy.growRatio
+            )
             core.debug_info(f"Sprouted {growth} coins")
             # Edit original plant message
             embed.description += " (Sprouted)"
@@ -365,22 +382,21 @@ class Economy(commands.Cog):
             # Send notification
             notification = await core.srite_send(
                 ctx,
-                f"A planted {emoji} has sprouted into {growth} more!\n" +
-                "Type `harvest` to harvest them!"
+                f"A planted {emoji} has sprouted into {growth} more!\n"
+                + "Type `harvest` to harvest them!",
             )
             core.debug_info(f"Sent sprout notification")
 
             # Wait for harvest message
             message = await self.bot.wait_for(
                 "message",
-                check=lambda m: m.content == "harvest" and m.channel == ctx.channel
+                check=lambda m: m.content == "harvest" and m.channel == ctx.channel,
             )
 
             # Reply to harvest message
             core.debug_info(f"Harvesting coins for {message.author}")
             await core.srite_send(
-                ctx,
-                f"{message.author.display_name} has harvested {growth} {emoji}!"
+                ctx, f"{message.author.display_name} has harvested {growth} {emoji}!"
             )
             # Delete notification message to reduce channel clutter
             await notification.delete()
@@ -422,7 +438,9 @@ class Economy(commands.Cog):
         await ctx.send(embed=embed)
 
     @stocks.command(aliases=["p", "port", "stocks"])
-    async def portfolio(self, ctx: commands.Context, member: discord.Member = None) -> None:
+    async def portfolio(
+        self, ctx: commands.Context, member: discord.Member = None
+    ) -> None:
         """View portfolio of user"""
 
         # Check member to function on
@@ -439,8 +457,7 @@ class Economy(commands.Cog):
 
         # Create embed
         embed = discord.Embed(
-            color=config.bot.color,
-            title=f"{member.display_name} stocks"
+            color=config.bot.color, title=f"{member.display_name} stocks"
         )
 
         # Populate embed
@@ -456,16 +473,17 @@ class Economy(commands.Cog):
                     # Only show if the user has some of the stock
                     if amount > 0:
                         # Calculate value
-                        value = amount*stocks[stock]
+                        value = amount * stocks[stock]
 
                         # Add field
                         embed.add_field(
                             name=stock,
                             value="{0} x ({1} {2}) = {3} {2}".format(
-                                amount, stocks[stock],
+                                amount,
+                                stocks[stock],
                                 await core.sriteEmoji(ctx.guild),
-                                value
-                            )
+                                value,
+                            ),
                         )
 
                         # Increase total value
@@ -475,9 +493,8 @@ class Economy(commands.Cog):
                 embed.add_field(
                     name="Total Value",
                     value="{0} {1}".format(
-                        totalValue,
-                        await core.sriteEmoji(ctx.guild)
-                    )
+                        totalValue, await core.sriteEmoji(ctx.guild)
+                    ),
                 )
 
         # Send message
@@ -502,7 +519,7 @@ class Economy(commands.Cog):
             stock = stock.upper()
 
             # Calculate price of purchase (pre increase the price)
-            price = (stocks[stock]+config.stocks.tradeChange*amount)*amount
+            price = (stocks[stock] + config.stocks.tradeChange * amount) * amount
 
             # Check if user has enough money
             if eco["money"] >= price:
@@ -518,27 +535,39 @@ class Economy(commands.Cog):
                     json.dump(eco, file)
 
                 # Change stock price
-                stocks[stock] += config.stocks.tradeChange*amount
+                stocks[stock] += config.stocks.tradeChange * amount
 
                 # Save stock data
                 with open("data/stocks.json", "w") as file:
                     json.dump(stocks, file)
 
                 # Send sucsess message
-                await ctx.send(embed=core.srite_msg("Bought {0} {1} for {2} {3}".format(
-                    amount, stock, price, await core.sriteEmoji(ctx.guild)
-                )))
+                await ctx.send(
+                    embed=core.srite_msg(
+                        "Bought {0} {1} for {2} {3}".format(
+                            amount, stock, price, await core.sriteEmoji(ctx.guild)
+                        )
+                    )
+                )
 
             else:
                 # Send error message
-                await ctx.send(embed=core.srite_msg("Sorry, you have {0} of {1} {2} {3}".format(
-                    eco["money"], price,
-                    await core.sriteEmoji(ctx.guild), "required for this purchase"
-                )))
+                await ctx.send(
+                    embed=core.srite_msg(
+                        "Sorry, you have {0} of {1} {2} {3}".format(
+                            eco["money"],
+                            price,
+                            await core.sriteEmoji(ctx.guild),
+                            "required for this purchase",
+                        )
+                    )
+                )
 
         else:
             await ctx.send(
-                embed=core.srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks")
+                embed=core.srite_msg(
+                    f"Stock {stock} doesnt exist, use s.s view to view all stocks"
+                )
             )
 
     @stocks.command(aliases=["s"])
@@ -560,7 +589,7 @@ class Economy(commands.Cog):
             stock = stock.upper()
 
             # Calculate price of sale
-            price = stocks[stock]*amount
+            price = stocks[stock] * amount
 
             # Check if user has enough stocks
             if eco["stocks"][stock] >= amount:
@@ -576,26 +605,36 @@ class Economy(commands.Cog):
                     json.dump(eco, file)
 
                 # Change stock price
-                stocks[stock] -= config.stocks.tradeChange*amount
+                stocks[stock] -= config.stocks.tradeChange * amount
 
                 # Save stock data
                 with open("data/stocks.json", "w") as file:
                     json.dump(stocks, file)
 
                 # Send sucsess message
-                await ctx.send(embed=core.srite_msg("Sold {0} {1} for {2} {3}".format(
-                    amount, stock, price, await core.sriteEmoji(ctx.guild)
-                )))
+                await ctx.send(
+                    embed=core.srite_msg(
+                        "Sold {0} {1} for {2} {3}".format(
+                            amount, stock, price, await core.sriteEmoji(ctx.guild)
+                        )
+                    )
+                )
 
             else:
                 # Send error message
-                await ctx.send(embed=core.srite_msg("Sorry, you have {0} of {1} {2}".format(
-                    eco["stocks"][stock], stock, "required for this sale"
-                )))
+                await ctx.send(
+                    embed=core.srite_msg(
+                        "Sorry, you have {0} of {1} {2}".format(
+                            eco["stocks"][stock], stock, "required for this sale"
+                        )
+                    )
+                )
 
         else:
             await ctx.send(
-                embed=core.srite_msg(f"Stock {stock} doesnt exist, use s.s view to view all stocks")
+                embed=core.srite_msg(
+                    f"Stock {stock} doesnt exist, use s.s view to view all stocks"
+                )
             )
 
     @stocks.command(hidden=True, aliases=["u"])

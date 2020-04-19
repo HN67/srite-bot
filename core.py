@@ -24,10 +24,7 @@ async def sriteEmoji(guild: discord.Guild) -> discord.Emoji:
     # Did not find sritecoin emoji
     try:
         with open("resources/sritecoin.png", "rb") as i:
-            emoji = await guild.create_custom_emoji(
-                name="sritecoin",
-                image=i.read()
-            )
+            emoji = await guild.create_custom_emoji(name="sritecoin", image=i.read())
         return emoji
     # Forbidden error if bot is not allowed to create a emoji
     # Attribute error if guild is a bad type (e.g. None)
@@ -49,7 +46,7 @@ async def srite_send(channel: discord.abc.Messageable, message: str) -> discord.
 
 # Debug method
 def debug_info(*messages: object) -> None:
-    '''Function for printing seperate information chunks'''
+    """Function for printing seperate information chunks"""
     # Prints each debug in the var-arg
     for line in messages:
         print(line)

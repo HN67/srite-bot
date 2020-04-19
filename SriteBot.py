@@ -25,8 +25,9 @@ os.chdir(os.path.dirname(__file__))
 
 
 # Initialize bot
-bot = commands.Bot(command_prefix=config.bot.prefixes,
-                   description="General bot created by HN67")
+bot = commands.Bot(
+    command_prefix=config.bot.prefixes, description="General bot created by HN67"
+)
 
 
 # Event that fires once the bot is fully logged in
@@ -35,17 +36,11 @@ async def on_ready() -> None:
     """Callback run once bot is fully logged in"""
 
     # Print login information
-    core.debug_info(
-        "Bot logged in as",
-        bot.user.name,
-        bot.user.id
-    )
+    core.debug_info("Bot logged in as", bot.user.name, bot.user.id)
 
     # Set activity to help command to give users somewhere to start
     await bot.change_presence(
-        activity=discord.Game(
-            name=(bot.command_prefix[0] + "help")
-        )
+        activity=discord.Game(name=(bot.command_prefix[0] + "help"))
     )
 
     # Show that setup is finished (e.g. background tasks have started)
@@ -92,9 +87,12 @@ async def reload(ctx: commands.Context) -> None:
 
 # Set the cogs which are to be initally loaded
 extensions = [
-    "cogs.memes", "cogs.misc",
-    "cogs.general", "cogs.timing",
-    "cogs.economy", "cogs.moderation",
+    "cogs.memes",
+    "cogs.misc",
+    "cogs.general",
+    "cogs.timing",
+    "cogs.economy",
+    "cogs.moderation",
 ]
 
 
@@ -107,7 +105,9 @@ def handle_extensions(handler: Callable[[str], Any]) -> bool:
         try:
             handler(extension)
         except Exception as e:  # pylint: disable=broad-except
-            core.debug_info(f"Failed to use {handler.__name__} on extension {extension}", e)
+            core.debug_info(
+                f"Failed to use {handler.__name__} on extension {extension}", e
+            )
             success = False
         else:
             core.debug_info(f"Used {handler.__name__} on extension {extension}")
