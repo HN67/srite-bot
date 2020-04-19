@@ -161,11 +161,11 @@ class Economy(commands.Cog):
         with model.User(user).open_economy() as economyData:
             await core.srite_send(
                 ctx,
-                f"""
-                    {user.display_name}
-                    has {economyData['money']}
-                    {await core.sriteEmoji(ctx.guild)}
-                """,
+                "{0} has {1} {2}".format(
+                    user.display_name,
+                    economyData["money"],
+                    await core.sriteEmoji(ctx.guild),
+                ),
             )
 
         # Debug info
