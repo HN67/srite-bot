@@ -92,6 +92,7 @@ extensions = [
     "cogs.general",
     "cogs.timing",
     "cogs.economy",
+    "cogs.stocks",
     "cogs.moderation",
 ]
 
