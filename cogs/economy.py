@@ -266,18 +266,6 @@ class Economy(commands.Cog):
             with model.User(user).open_economy() as harvester:
                 harvester["money"] += 1
 
-            # # Validate author
-            # await eco_data_validate(user)
-
-            # # Increase collector money
-            # with open(f"data/{user.id}/Economy.json", "r") as file:
-            #     data = json.load(file)
-
-            # data["money"] += 1
-
-            # with open(f"data/{user.id}/Economy.json", "w") as file:
-            #     json.dump(data, file)
-
         core.debug_info("Out of hash loop", len(display_string))
         await display.delete()
 
@@ -437,14 +425,6 @@ class Economy(commands.Cog):
         # Check member to function on
         if member is None:
             member = ctx.author
-
-        # Load data
-        with open(f"data/{member.id}/Economy.json") as file:
-            data = json.load(file)
-
-        # Load stock values
-        with open("data/stocks.json") as file:
-            stocks = json.load(file)
 
         # Create embed
         embed = discord.Embed(
