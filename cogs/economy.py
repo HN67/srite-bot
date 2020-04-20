@@ -111,21 +111,12 @@ async def validate_stocks() -> None:
 async def update_stocks() -> None:
     """Updates the stocks"""
 
-    # Ensure that all stocks have been initialized
-    await validate_stocks()
-
-    # Load stocks
-    with open("data/stocks.json", "r") as file:
-        stocks = json.load(file)
-
-    # Update stocks
-    for stock in stocks:
-
-        stocks[stock] += random.randint(-1 * config.stocks.change, config.stocks.change)
-
-    # Resave stocks
-    with open("data/stocks.json", "w") as file:
-        json.dump(stocks, file)
+    with model.Stocks().open() as stocks:
+        # Update stocks
+        for stock in stocks:
+            stocks[stock] += random.randint(
+                -1 * config.stocks.change, config.stocks.change
+            )
 
 
 class Economy(commands.Cog):
