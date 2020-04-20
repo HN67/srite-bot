@@ -475,71 +475,57 @@ class Economy(commands.Cog):
     async def buy(self, ctx: commands.Context, stock: str, amount: int = 1) -> None:
         """Command to buy stocks"""
 
-        # Load stocks
-        with open("data/stocks.json", "r") as file:
-            stocks = json.load(file)
+        # Open data
+        with model.User(ctx.author).open_economy() as eco:
+            with model.Stocks().open() as stocks:
+                # Check if stock exists (case doesnt matter)
+                if stock.upper() in stocks:
 
-        # Load user economy
-        with open(f"data/{ctx.author.id}/Economy.json", "r") as file:
-            eco = json.load(file)
+                    # Upper stock
+                    stock = stock.upper()
 
-        # Check if stock exists (case doesnt matter)
-        if stock.upper() in stocks:
+                    # Calculate price of purchase (pre increase the price)
+                    price = (
+                        stocks[stock] + config.stocks.tradeChange * amount
+                    ) * amount
 
-            # Upper stock
-            stock = stock.upper()
+                    # Check if user has enough money
+                    if eco["money"] >= price:
 
-            # Calculate price of purchase (pre increase the price)
-            price = (stocks[stock] + config.stocks.tradeChange * amount) * amount
+                        # Decrease money
+                        eco["money"] -= price
 
-            # Check if user has enough money
-            if eco["money"] >= price:
+                        # Increase stocks
+                        eco["stocks"][stock] += amount
 
-                # Decrease money
-                eco["money"] -= price
+                        # Change stock price
+                        stocks[stock] += config.stocks.tradeChange * amount
 
-                # Increase stocks
-                eco["stocks"][stock] += amount
-
-                # Resave data
-                with open(f"data/{ctx.author.id}/Economy.json", "w") as file:
-                    json.dump(eco, file)
-
-                # Change stock price
-                stocks[stock] += config.stocks.tradeChange * amount
-
-                # Save stock data
-                with open("data/stocks.json", "w") as file:
-                    json.dump(stocks, file)
-
-                # Send sucsess message
-                await ctx.send(
-                    embed=core.srite_msg(
-                        "Bought {0} {1} for {2} {3}".format(
-                            amount, stock, price, await core.sriteEmoji(ctx.guild)
+                        # Send sucsess message
+                        await core.srite_send(
+                            ctx,
+                            "Bought {0} {1} for {2} {3}".format(
+                                amount, stock, price, await core.sriteEmoji(ctx.guild),
+                            ),
                         )
-                    )
-                )
 
-            else:
-                # Send error message
-                await ctx.send(
-                    embed=core.srite_msg(
-                        "Sorry, you have {0} of {1} {2} {3}".format(
-                            eco["money"],
-                            price,
-                            await core.sriteEmoji(ctx.guild),
-                            "required for this purchase",
+                    else:
+                        # Send error message
+                        await core.srite_send(
+                            ctx,
+                            "Sorry, you have {0} of {1} {2} {3}".format(
+                                eco["money"],
+                                price,
+                                await core.sriteEmoji(ctx.guild),
+                                "required for this purchase",
+                            ),
                         )
-                    )
-                )
 
-        else:
-            await ctx.send(
-                embed=core.srite_msg(
-                    f"Stock {stock} doesnt exist, use s.s view to view all stocks"
-                )
-            )
+                else:
+                    await core.srite_send(
+                        ctx,
+                        f"Stock {stock} doesnt exist, use s.s market to view all stocks",
+                    )
 
     @stocks.command(aliases=["s"])
     async def sell(self, ctx: commands.Context, stock: str, amount: int = 1) -> None:
