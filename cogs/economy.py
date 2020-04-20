@@ -1,13 +1,10 @@
 """Economy cog"""
 
 # Import python modules
-import json
 import datetime
 import time
 import random
 import asyncio
-
-from pathlib import Path
 
 # Import discord.py
 import discord
@@ -17,94 +14,8 @@ from discord.ext import commands
 import core
 import config
 
+# Import user data Model
 from modules import model
-
-
-# Validation of user data function
-async def eco_data_validate(member: discord.Member) -> None:
-    """Validates and creates a user's economy data if needed"""
-
-    # Check that path exists
-    if Path("data/{}".format(member.id)).is_dir():
-
-        pass
-
-    else:
-
-        # Create Path
-        Path("data/{}".format(member.id)).mkdir(parents=True, exist_ok=True)
-
-    # Update info file
-    with open("data/{}/Info.json".format(member.id), "w") as file:
-        json.dump({"id": member.id, "name": member.name}, file)
-
-    # Check state of Economy file
-    try:
-        with open("data/{}/Economy.json".format(member.id), "r") as file:
-            economy = json.load(file)
-
-    # Clause activates if file does not exist
-    except FileNotFoundError:
-
-        # Create valid economy file since it doesnt exist
-        economy = {k: 0 for k in config.economy.attributes}
-
-        # Create stocks tracker
-        economy["stocks"] = {k: 0 for k in config.stocks.items}
-
-    # Clause activates if the file exists
-    else:
-        # Check Economy file data
-        # Add any missing keys
-        for key in config.economy.attributes:
-            if key not in economy:
-                economy[key] = 0
-
-        # Validate stock key
-        if "stocks" not in economy:
-            # Create stocks tracker
-            economy["stocks"] = {k: 0 for k in config.stocks.items}
-        else:
-            # Check each individual key
-            for key in config.stocks.items:
-                if key not in economy["stocks"]:
-                    economy["stocks"][key] = 0
-
-    # Update economy data
-    with open("data/{}/Economy.json".format(member.id), "w") as file:
-        json.dump(economy, file)
-
-
-# Validate stock file
-async def validate_stocks() -> None:
-    """Validates the stocks file"""
-
-    stocks = config.stocks.items
-
-    # Make sure stock file exists
-    try:
-
-        with open("data/stocks.json", "r") as file:
-
-            # Load it if it does exist
-            data = json.load(file)
-
-    except FileNotFoundError:
-
-        # Create stock file
-        data = {k: config.stocks.standard for k in stocks}
-        core.debug_info("Created stocks file", data)
-
-    else:
-
-        # Check each stock and create it if it does not exist
-        for stock in stocks:
-            if stock not in data:
-                data[stock] = config.stocks.standard
-
-    # Resave stocks
-    with open("data/stocks.json", "w") as file:
-        json.dump(data, file)
 
 
 # Function to change stock value
@@ -389,13 +300,6 @@ class Economy(commands.Cog):
     @commands.group(aliases=["s"], description="Buy and sell srite stocks")
     async def stocks(self, ctx: commands.Context) -> None:
         """Stocks command group"""
-
-        # Validate authors economy since stocks are
-        # naturally tied to the economy
-        await eco_data_validate(ctx.author)
-
-        # Also validate stocks
-        await validate_stocks()
 
         if ctx.invoked_subcommand is None:
             await ctx.send("Specify a stock command")
