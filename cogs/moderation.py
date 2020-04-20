@@ -21,6 +21,19 @@ class Moderation(commands.Cog):
         if ctx.invoked_subcommand is None:
             await core.srite_send(ctx, "Please specify a subcommand")
 
+    @mod.error
+    async def mod_error(
+        self, ctx: commands.Context, error: commands.CommandError
+    ) -> None:
+        """Error handler for mod commands"""
+        if isinstance(error, commands.MissingPermissions):
+            await core.srite_send(
+                ctx, "Must be an admin to use this command. Nice try."
+            )
+        else:
+            await core.srite_send(ctx, "There was an unexpected error")
+            core.debug_info("Unexpected error in mod command", error)
+
     @mod.command()
     async def prune(self, ctx: commands.Context, number: int) -> None:
         """Prunes messages from the channel"""
@@ -44,10 +57,6 @@ class Moderation(commands.Cog):
             await core.srite_send(
                 ctx,
                 "Specify the number of messages to prune as a number. use *prune <num>",
-            )
-        elif isinstance(error, commands.MissingPermissions):
-            await core.srite_send(
-                ctx, "Must be an admin to use this command. Nice try."
             )
 
     @mod.command()
