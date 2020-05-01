@@ -45,23 +45,62 @@ class Roles(commands.Cog):
                 "Sorry, the bot doesn't have sufficient permissions to add this role",
             )
 
-    @add.error
-    async def add_handler(
+    async def role_change_handler(
         self, ctx: commands.Context, error: commands.CommandError
     ) -> None:
-        """Error handler for add command"""
+        """Common error handler for manipulating roles"""
         # Invalid role
         if isinstance(error, commands.BadArgument):
             await core.srite_send(ctx, "Couldn't find specified role")
         # No role/argument given
         elif isinstance(error, commands.MissingRequiredArgument):
             await core.srite_send(ctx, "Missing required role argument")
+        elif isinstance(error, commands.UserInputError):
+            await core.srite_send(ctx, "An error occured with user input")
         else:
             await core.srite_send(
                 ctx, "An unexpected error occured; please contact the bot owner"
             )
             core.debug_info("Unhandled exception", type(error), error)
 
+    @add.error
+    async def add_handler(
+        self, ctx: commands.Context, error: commands.CommandError
+    ) -> None:
+        """Error handler for add command"""
+        await self.role_change_handler(ctx, error)
+
+    @roles.command()
+    async def remove(self, ctx: commands.Context, role: discord.Role) -> None:
+        """Removes a role from the author"""
+        core.debug_info("Removing role", role, type(role))
+        # Handles insufficient perms, which means that either the bot doesnt have manage roles perm,
+        # or a role higher than the bot was given
+        try:
+            # Only allows specific roles
+            if role in (
+                ctx.guild.get_role(valid) for valid in config.roles.valid_roles
+            ):
+                await ctx.author.remove_roles(role)
+                await core.srite_send(
+                    ctx, f"Role {role} removed from {ctx.author.display_name}"
+                )
+            else:
+                await core.srite_send(
+                    ctx, "Sorry, that role is not permitted to be removed by the bot."
+                )
+        except discord.Forbidden:
+            await core.srite_send(
+                ctx,
+                "Sorry, the bot doesn't have sufficient permissions to remove this role",
+            )
+
+    @remove.error
+    async def remove_handler(
+        self, ctx: commands.Context, error: commands.CommandError
+    ) -> None:
+        """Error handler for remove command"""
+        await self.role_change_handler(ctx, error)
 
 
 # Function to add cog
