@@ -94,6 +94,7 @@ extensions = [
     "cogs.economy",
     "cogs.stocks",
     "cogs.moderation",
+    "cogs.roles",
 ]
 
 

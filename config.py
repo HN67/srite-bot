@@ -10,7 +10,7 @@ class economy:
     growTimeMin = 180
     growTimeMax = 300
     growMatureTime = 60  # Coins start growing after this time
-    growRatio = 1/24  # Number of coins grown per second (after the mature time)
+    growRatio = 1 / 24  # Number of coins grown per second (after the mature time)
 
     collectTime = 10.0
 
@@ -30,20 +30,21 @@ class bot:
 class stocks:
     """Config for stocks functionality"""
 
-    items = ["SRITE",
-             "POG",
-             "NWRD",
-             "DMND",
-             "NOTYET",
-             "ANGERY",
-             "BRUH",
-             "AYA",
-             "ANSLY",
-             "SPNWRD",
-             "NGWRD",
-             "CORONA",
-             "ALLAH"
-             ]
+    items = [
+        "SRITE",
+        "POG",
+        "NWRD",
+        "DMND",
+        "NOTYET",
+        "ANGERY",
+        "BRUH",
+        "AYA",
+        "ANSLY",
+        "SPNWRD",
+        "NGWRD",
+        "CORONA",
+        "ALLAH",
+    ]
 
     standard = 100
     change = 5
@@ -73,3 +74,13 @@ class fools:
     """Config for april fools features"""
 
     channels = [271124181372895242]
+
+
+class roles:
+    """Config for roles"""
+
+    valid_roles = [
+        507374117964742670,
+        466422100090159104,
+        546516298528456715,
+    ]
