@@ -102,6 +102,21 @@ class Roles(commands.Cog):
         """Error handler for remove command"""
         await self.role_change_handler(ctx, error)
 
+    @roles.command()
+    async def available(self, ctx: commands.Context) -> None:
+        """Displays the roles available for individual manipulation"""
+        # Create embed
+        embed = discord.Embed(color=config.bot.color, title="Available Roles")
+
+        # Pair roles with enumeration
+        for index, role in enumerate(
+            ctx.guild.get_role(value) for value in config.roles.valid_roles
+        ):
+            embed.add_field(name=index + 1, value=role.name)
+
+        # Send embed
+        await ctx.send(embed=embed)
+
 
 # Function to add cog
 def setup(bot: commands.Bot) -> None:
