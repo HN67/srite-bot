@@ -75,6 +75,16 @@ class Memes(commands.Cog):
             + "463186200618860546/Z.png"
         )
 
+    @commands.command()
+    async def he(self, ctx: commands.Context) -> None:
+        """Soap meme command"""
+        await ctx.send("he eatin")
+        await self.bot.wait_for("message", check=lambda msg: msg.channel == ctx.channel)
+        await ctx.send(
+            "https://cdn.discordapp.com/attachments/637464445588602931/"
+            + "637464690842402830/soap_1.mp4"
+        )
+
 
 # Setup function to add cog
 def setup(bot: commands.Bot) -> None:
