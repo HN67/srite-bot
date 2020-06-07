@@ -67,6 +67,19 @@ class Moderation(commands.Cog):
         async for message in channel.history(after=message):
             await message.delete()
 
+    @mod.command()
+    async def members(self, ctx: commands.Context, guild: discord.Guild = None) -> None:
+        """Returns a list of all members in the guild, defaults to current guild"""
+        # Default to contextual guild to allow smooth usage
+        # TODO: non-default is broken, create custom converter https://discordpy.readthedocs.io/en/latest/ext/commands/commands.html#converters
+        if not guild:
+            guild = ctx.guild
+        # Send list of members in codeblock to prevent pinging
+        core.debug_info(f"Collecting members of {guild}")
+        await core.srite_send(
+            ctx, "\n".join(member.mention for member in guild.members)
+        )
+
 
 # Function to add cog
 def setup(bot: commands.Bot) -> None:
