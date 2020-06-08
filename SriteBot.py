@@ -56,6 +56,25 @@ async def on_message(message: discord.Message) -> None:
     await bot.process_commands(message)
 
 
+# Save default handler since it gets overriden by the event
+default_error_handler = bot.on_command_error
+
+
+@bot.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError) -> None:
+    """Callback run when there is an error running a command"""
+
+    # Only run global handler if command-local is not provided
+    # hasattr technique taken from discord.py default on_command_error source
+    if not hasattr(ctx.command, "on_error"):
+
+        # Notify user so that the bot doesn't silently fail
+        await core.srite_send(ctx, f"Oops, something went wrong.\n```{error}```")
+
+        # Call default handling to preserve std.err output
+        await default_error_handler(ctx, error)
+
+
 # Ping command
 @bot.command()
 async def ping(ctx: commands.Context) -> None:
