@@ -114,6 +114,7 @@ extensions = [
     "cogs.stocks",
     "cogs.moderation",
     "cogs.roles",
+    "cogs.test",
 ]
 
 
