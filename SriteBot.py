@@ -21,7 +21,7 @@ import core
 import SriteBotInfo
 
 # Set cwd so that bot can be run from anywhere and still functions correctly
-os.chdir(os.path.dirname(__file__))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Initialize bot
