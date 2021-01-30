@@ -31,7 +31,7 @@ class Timing(commands.Cog):
     async def uptime(self, ctx: commands.Context) -> None:
         """Returns the uptime of the bot."""
         delta = int(time.time()) - self.start_time
-        await core.srite_send(ctx, str(datetime.timedelta(delta)))
+        await core.srite_send(ctx, str(datetime.timedelta(seconds=delta)))
 
     # Surprise command
     @commands.command()
