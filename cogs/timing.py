@@ -2,6 +2,7 @@
 
 # Import core librarys
 import asyncio
+import datetime
 import time
 
 # Import discord.py
@@ -21,6 +22,16 @@ class Timing(commands.Cog):
     # Init to reference bot
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+
+        # Save starting time
+        self.start_time = int(time.time())
+
+    # Uptime command
+    @commands.command()
+    async def uptime(self, ctx: commands.Context) -> None:
+        """Returns the uptime of the bot."""
+        delta = int(time.time()) - self.start_time
+        await core.srite_send(ctx, str(datetime.timedelta(delta)))
 
     # Surprise command
     @commands.command()
