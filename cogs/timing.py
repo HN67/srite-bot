@@ -19,19 +19,23 @@ class Timing(commands.Cog):
     """SriteBot Timing Cog"""
 
     # Init to reference bot
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     # Surprise command
     @commands.command()
-    async def surprise(self, ctx, delay: int, *, message: str):
-        '''Echos the message after delay seconds'''
+    async def surprise(
+        self, ctx: commands.Context, delay: int, *, message: str
+    ) -> None:
+        """Echos the message after delay seconds"""
         core.debug_info("Surprise message", message)
         await asyncio.sleep(delay)
         await ctx.send(message)
 
     @surprise.error
-    async def surprise_handler(self, ctx, error):
+    async def surprise_handler(
+        self, ctx: commands.Context, error: commands.CommandError
+    ) -> None:
         """Handles surprise command errors"""
         if isinstance(error, discord.ext.commands.BadArgument):
             await ctx.send("Please use whole numbers")
@@ -40,7 +44,7 @@ class Timing(commands.Cog):
             print(error)
 
     @commands.command()
-    async def timer(self, ctx, duration: int):
+    async def timer(self, ctx: commands.Context, duration: int) -> None:
         """Displays a counting down timer"""
         # Time remaining
         left = duration
@@ -57,7 +61,7 @@ class Timing(commands.Cog):
         await ctx.send("Timer Finished {0}".format(ctx.author.mention))
 
     @commands.command(name="time")
-    async def _time(self, ctx):
+    async def _time(self, ctx: commands.Context) -> None:
         """Times how long it takes you to respond with 'stop'"""
         # Save current time
         current = time.time()
@@ -65,19 +69,22 @@ class Timing(commands.Cog):
         await core.srite_send(ctx.channel, "Waiting for 'stop' within 10s")
 
         # Define check (what msg to wait for)
-        def check(msg):
-            return (msg.content == "stop" and msg.channel == ctx.channel
-                    and msg.author == ctx.author)
+        def check(msg: discord.Message) -> bool:
+            return (
+                msg.content == "stop"
+                and msg.channel == ctx.channel
+                and msg.author == ctx.author
+            )
 
         # Wait for a response
         try:
-            await self.bot.wait_for("message", check=check,
-                                    timeout=config.time.timeout)
+            await self.bot.wait_for("message", check=check, timeout=config.time.timeout)
 
         # Timeout clause
         except asyncio.TimeoutError:
-            await ctx.send(embed=core.srite_msg(
-                f"Timeout at {config.time.timeout} seconds"))
+            await ctx.send(
+                embed=core.srite_msg(f"Timeout at {config.time.timeout} seconds")
+            )
 
         # Response found
         else:
@@ -86,7 +93,8 @@ class Timing(commands.Cog):
             # Send msg
             await ctx.send(embed=core.srite_msg(f"Responded in {change} seconds"))
 
+
 # Function to load cog
-def setup(bot):
+def setup(bot: commands.Bot) -> None:
     """Loads timing cog"""
     bot.add_cog(Timing(bot))
