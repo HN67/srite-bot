@@ -112,7 +112,9 @@ class Roles(commands.Cog):
         for index, role in enumerate(
             ctx.guild.get_role(value) for value in config.roles.valid_roles
         ):
-            embed.add_field(name=index + 1, value=role.name)
+            # Only try to display the role if it still exists
+            if role:
+                embed.add_field(name=index + 1, value=role.name)
 
         # Send embed
         await ctx.send(embed=embed)
