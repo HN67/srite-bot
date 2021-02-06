@@ -97,10 +97,10 @@ class General(commands.Cog):
             channel = message.channel
 
             # Search for certain phrases
-            if "im " in text:
-                await channel.send(
-                    "hi {0}, im SriteBot.".format(text[text.find("im") + 2 :].strip())
-                )
+            # if "im " in text:
+            #     await channel.send(
+            #         "hi {0}, im SriteBot.".format(text[text.find("im") + 2 :].strip())
+            #     )
 
 
 # Setup function to load cog
