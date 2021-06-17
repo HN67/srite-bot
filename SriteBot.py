@@ -1,5 +1,6 @@
 """
-HN67's SriteBot
+Run HN67's SriteBot.
+
 https://discordapp.com/oauth2/authorize?&client_id=348653600345423873&scope=bot&permissions=0
 """
 
@@ -33,8 +34,10 @@ bot = commands.Bot(
 # Event that fires once the bot is fully logged in
 @bot.event
 async def on_ready() -> None:
-    """Callback run once bot is fully logged in"""
+    """Perform setup actions.
 
+    Callback that is called once the bot is fully logged in.
+    """
     # Print login information
     core.debug_info("Bot logged in as", bot.user.name, bot.user.id)
 
@@ -50,8 +53,11 @@ async def on_ready() -> None:
 # Event that fires every message that the bot can see
 @bot.event
 async def on_message(message: discord.Message) -> None:
-    """Callback run whenever a messege is sent"""
+    """Handle a sent message.
 
+    Callback that is called whenever a message is sent.
+    The message must be visible to the bot.
+    """
     # Process commands module commands
     await bot.process_commands(message)
 
@@ -62,8 +68,10 @@ default_error_handler = bot.on_command_error
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError) -> None:
-    """Callback run when there is an error running a command"""
+    """Handle command error.
 
+    Callback that is called when a command raises a CommandError.
+    """
     # Only run global handler if command-local is not provided
     # hasattr technique taken from discord.py default on_command_error source
     if not hasattr(ctx.command, "on_error"):
@@ -78,21 +86,24 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError) 
 # Ping command
 @bot.command()
 async def ping(ctx: commands.Context) -> None:
-    """Ping command to test bot connectivity"""
+    """Ping the bot.
+
+    Use to test bot connectivity.
+    """
     await ctx.send(embed=core.srite_msg("pong"))
 
 
 # Test command for various things
 @bot.command()
 async def test(ctx: commands.Context, number: int) -> None:
-    """Test command to test various features"""
+    """Test various features."""
     await core.srite_send(ctx.channel, str(number + 1))
 
 
 @bot.command(hidden=True)
 @commands.is_owner()
 async def reload(ctx: commands.Context) -> None:
-    """Reloads all extensions"""
+    """Reload all extensions."""
     # Reload extensions
     core.debug_info("Reloading extensions")
     success = handle_extensions(bot.reload_extension)
@@ -119,7 +130,9 @@ extensions = [
 
 
 def handle_extensions(handler: Callable[[str], Any]) -> bool:
-    """Calls the given method on each of the extension strings. Intended to load/etc
+    """Handle all extensions with a given handler.
+
+    Calls the given method on each of the extension strings. Intended to load/etc.
     Returns False if an exception is thrown when loading any extension, True if none thrown
     """
     success = True
