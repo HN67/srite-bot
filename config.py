@@ -1,8 +1,8 @@
-"""Config file for srite bot"""
+"""Config file for srite bot."""
 
 
 class economy:
-    """Config for economy functionality"""
+    """Config for economy functionality."""
 
     taxAmount = 100
     taxTime = 3600
@@ -20,7 +20,7 @@ class economy:
 
 
 class bot:
-    """Config for core bot"""
+    """Config for core bot."""
 
     color = 0x00A229
 
@@ -28,7 +28,7 @@ class bot:
 
 
 class stocks:
-    """Config for stocks functionality"""
+    """Config for stocks functionality."""
 
     items = [
         "SRITE",
@@ -55,14 +55,14 @@ class stocks:
 
 
 class time:
-    """Time configs"""
+    """Time configs."""
 
     interval = 1
     timeout = 10
 
 
 class uni:
-    """Unicode aliases"""
+    """Unicode aliases."""
 
     leftArrow = "\u2B05"  # "\u21E6"
     upArrow = "\u2B06"
@@ -71,13 +71,13 @@ class uni:
 
 
 class fools:
-    """Config for april fools features"""
+    """Config for april fools features."""
 
     channels = [271124181372895242]
 
 
 class roles:
-    """Config for roles"""
+    """Config for roles."""
 
     valid_roles = [
         507374117964742670,

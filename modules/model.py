@@ -1,4 +1,4 @@
-"""Module for managing and modeling SriteBot data"""
+"""Module for managing and modeling SriteBot data."""
 
 # Import python libraries
 import random
@@ -15,26 +15,28 @@ import config
 
 
 def data_path(path: object) -> str:
-    """Returns a path to the data folder with the given path appended (in str form)"""
+    """Compose the data folder path with the given path."""
     return f"data/{path}"
 
 
 class User:
-    """Represents SriteBot user data for a specific user"""
+    """Model to represent SriteBot data for a specific user."""
 
     def __init__(self, user: discord.User) -> None:
+        """Create a User based on a discord.User object."""
         self.user: discord.User = user
-        self.id: int = self.user.id  # User ID
-        self.path: str = data_path(str(self.id))  # User Data Folder Path
+        self.id: int = self.user.id
+        # Each user data is stored in a folder based on their id
+        self.path: str = data_path(str(self.id))
         self.infoPath: str = self.location("Info.json")
         self.economyPath: str = self.location("Economy.json")
 
     def location(self, path: object) -> str:
-        """Appends the given path to this User's data folder"""
+        """Compose this User's data folder with the given path."""
         return f"{self.path}/{path}"
 
     def verify(self) -> None:
-        """Verifies the disc folder datastructure integrity for this User"""
+        """Verify the stored user data integrity for this User."""
         # Verify folder existance
         if not Path(self.path).is_dir():
             Path(self.path).mkdir()
@@ -44,7 +46,7 @@ class User:
             json.dump({"id": self.id, "name": self.user.name}, file)
 
     def verify_economy(self) -> None:
-        """Verifies the disc economy datastructure integrity for this User"""
+        """Verify the stored economy data integrity for this User."""
         # Verify user structure
         self.verify()
 
@@ -82,7 +84,10 @@ class User:
 
     @contextmanager
     def open_economy(self) -> Generator[dict, None, None]:
-        """Allows manipulation of economy data within the context"""
+        """Manipulate economy data within a context.
+
+        Changes to the data are automatically saved on context exit.
+        """
         # Verify data
         self.verify_economy()
         # Load data
@@ -99,13 +104,17 @@ class User:
 
 
 class Stocks:
-    """Represents SriteBot stock data. Every instance references the same data."""
+    """Model to represent SriteBot stock data.
+
+    Every instance references the same data.
+    """
 
     def __init__(self) -> None:
+        """Construct a view of the stock data."""
         self.path: str = data_path("stocks.json")
 
     def verify(self) -> None:
-        """Verifies the disc datastructure integrity for stocks"""
+        """Verify the stored stock data."""
         # Try loading the existing file
         stockData = {}
         try:
@@ -125,7 +134,10 @@ class Stocks:
 
     @contextmanager
     def open(self) -> Generator[dict, None, None]:
-        """Allows manipulation of stock data within the context"""
+        """Manipulate stock data within a context.
+
+        Changes to the data are automatically saved on context exit.
+        """
         # Verify data
         self.verify()
         # Load data
@@ -141,7 +153,7 @@ class Stocks:
                 json.dump(data, file)
 
     def update(self) -> None:
-        """Performs the periodic stock update using config data"""
+        """Perform a stock update using config data."""
         # Verify stock data
         self.verify()
 
@@ -149,6 +161,5 @@ class Stocks:
         with self.open() as data:
             for stock in data:
                 data[stock] += random.randint(
-                    -config.stocks.change,
-                    config.stocks.change
+                    -config.stocks.change, config.stocks.change
                 )

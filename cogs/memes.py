@@ -20,7 +20,10 @@ class Memes(commands.Cog):
     @meme.command(description="dot dab")
     async def dab(self, ctx: commands.Context) -> None:
         """Dab meme command"""
-        await ctx.send(file=discord.File("resources/dab.jpg"))
+        await ctx.send(
+            "https://cdn.discordapp.com/attachments/271124181372895242/"
+            "855580456149581824/Dab.jpg"
+        )
 
     @meme.command(description="doge")
     async def angery(self, ctx: commands.Context) -> None:

@@ -1,4 +1,4 @@
-"""SriteBot core functions file"""
+"""SriteBot core functions."""
 
 # Import discord
 import discord
@@ -9,8 +9,7 @@ import config
 
 # Makes sure the guild is equipped to deal with economy (e.g. emoji)
 async def sriteEmoji(guild: discord.Guild) -> discord.Emoji:
-    """Attempts to return a SriteCoin emoji"""
-
+    """Attempt to obtain a SriteCoin emoji."""
     try:
         for e in guild.emojis:
             if e.name == "sritecoin":
@@ -34,19 +33,19 @@ async def sriteEmoji(guild: discord.Guild) -> discord.Emoji:
 
 # Returns an embed wrapping the text
 def srite_msg(value: str) -> discord.Embed:
-    """Returns a customized embed with the given message"""
+    """Create a customized embed with the given message."""
     return discord.Embed(color=config.bot.color, description=value)
 
 
 # Sends an embedded msg to channel
 async def srite_send(channel: discord.abc.Messageable, message: str) -> discord.Message:
-    """Sends the message as an embed"""
+    """Send the message as an embed."""
     return await channel.send(embed=srite_msg(message))
 
 
 # Debug method
 def debug_info(*messages: object) -> None:
-    """Function for printing seperate information chunks"""
+    """Print multiple chunks of information, followed by a spacing line."""
     # Prints each debug in the var-arg
     for line in messages:
         print(line)
