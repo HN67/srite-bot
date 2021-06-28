@@ -18,9 +18,6 @@ import config
 # Import core
 import core
 
-# Import sensitive bot info
-import SriteBotInfo
-
 # Set cwd so that bot can be run from anywhere and still functions correctly
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -149,12 +146,20 @@ def handle_extensions(handler: Callable[[str], Any]) -> bool:
     return success
 
 
-# Turn on bot and load extensions, etc
-if __name__ == "__main__":
-
+def start() -> None:
+    """Start SriteBot."""
     # Add extensions
     handle_extensions(bot.load_extension)
 
+    # Load bot id
+    with open(".token", "r", encoding="utf-8") as token_file:
+        token = token_file.read().strip()
+
     # Start bot
     core.debug_info("Starting bot")
-    bot.run(SriteBotInfo.bot_id)
+    bot.run(token)
+
+
+# Main entrypoint
+if __name__ == "__main__":
+    start()

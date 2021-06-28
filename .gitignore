@@ -1,13 +1,10 @@
-# Ignore SriteBotInfo
-SriteBotInfo.py
-
-# Ignore pycaches
+# Ignore compiled python
 __pycache__/
-cogs/__pycache__/
-scripts/__pycache__/
 
 # Ignore vscode folder
 .vscode/
 
 # Ignore mypy cache
 .mypy_cache/
+
+.token
