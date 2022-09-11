@@ -42,7 +42,7 @@ class User:
             Path(self.path).mkdir()
 
         # Update info file
-        with open(self.infoPath, "w") as file:
+        with open(self.infoPath, "w", encoding="utf-8") as file:
             json.dump({"id": self.id, "name": self.user.name}, file)
 
     def verify_economy(self) -> None:
@@ -53,7 +53,7 @@ class User:
         # Try loading the existing file
         economyData = {}
         try:
-            with open(self.economyPath, "r") as file:
+            with open(self.economyPath, "r", encoding="utf-8") as file:
                 economyData = json.load(file)
         except FileNotFoundError:
             pass
@@ -79,7 +79,7 @@ class User:
         # Repack stock data
         economyData["stocks"] = stockData
         # Save economy data
-        with open(self.economyPath, "w") as file:
+        with open(self.economyPath, "w", encoding="utf-8") as file:
             json.dump(economyData, file)
 
     @contextmanager
@@ -92,14 +92,14 @@ class User:
         self.verify_economy()
         # Load data
         data = {}
-        with open(self.economyPath, "r") as file:
+        with open(self.economyPath, "r", encoding="utf-8") as file:
             data = json.load(file)
         try:
             # Yield data
             yield data
         finally:
             # Resave data
-            with open(self.economyPath, "w") as file:
+            with open(self.economyPath, "w", encoding="utf-8") as file:
                 json.dump(data, file)
 
 
@@ -118,7 +118,7 @@ class Stocks:
         # Try loading the existing file
         stockData = {}
         try:
-            with open(self.path, "r") as file:
+            with open(self.path, "r", encoding="utf-8") as file:
                 stockData = json.load(file)
         except FileNotFoundError:
             pass
@@ -129,7 +129,7 @@ class Stocks:
                 stockData[stock] = config.stocks.standard
 
         # Resave stock data
-        with open(self.path, "w") as file:
+        with open(self.path, "w", encoding="utf-8") as file:
             json.dump(stockData, file)
 
     @contextmanager
@@ -142,14 +142,14 @@ class Stocks:
         self.verify()
         # Load data
         data = {}
-        with open(self.path, "r") as file:
+        with open(self.path, "r", encoding="utf-8") as file:
             data = json.load(file)
         try:
             # Yield data
             yield data
         finally:
             # Resave data
-            with open(self.path, "w") as file:
+            with open(self.path, "w", encoding="utf-8") as file:
                 json.dump(data, file)
 
     def update(self) -> None:
