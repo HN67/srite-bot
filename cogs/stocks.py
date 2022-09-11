@@ -148,7 +148,10 @@ class Stocks(commands.Cog):
                         await core.srite_send(
                             ctx,
                             "Bought {0} {1} for {2} {3}".format(
-                                amount, stock, price, await core.sriteEmoji(ctx.guild),
+                                amount,
+                                stock,
+                                price,
+                                await core.sriteEmoji(ctx.guild),
                             ),
                         )
 
@@ -202,7 +205,10 @@ class Stocks(commands.Cog):
                         await core.srite_send(
                             ctx,
                             "Sold {0} {1} for {2} {3}".format(
-                                amount, stock, price, await core.sriteEmoji(ctx.guild),
+                                amount,
+                                stock,
+                                price,
+                                await core.sriteEmoji(ctx.guild),
                             ),
                         )
 
@@ -211,7 +217,9 @@ class Stocks(commands.Cog):
                         await core.srite_send(
                             ctx,
                             "Sorry, you have {0} of {1} {2}".format(
-                                eco["stocks"][stock], stock, "required for this sale",
+                                eco["stocks"][stock],
+                                stock,
+                                "required for this sale",
                             ),
                         )
 

@@ -15,6 +15,7 @@ import core
 # Import config
 import config
 
+
 # Cog class
 class Timing(commands.Cog):
     """SriteBot Timing Cog"""
