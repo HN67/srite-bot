@@ -7,6 +7,7 @@ from discord.ext import commands
 # Import custom modules
 import core
 import config
+from modules import model
 
 
 class Roles(commands.Cog):
@@ -24,13 +25,16 @@ class Roles(commands.Cog):
     async def add(self, ctx: commands.Context, role: discord.Role) -> None:
         """Adds a role to the author"""
         core.debug_info("Adding role", role, type(role))
+        if ctx.guild is None:
+            await core.srite_send(ctx, "This command is only available in a server.")
+            return
+        with model.Guild(guild=ctx.guild).open_roles() as roles_data:
+            valid_roles = roles_data["self_roles"]
         # Handles insufficient perms, which means that either the bot doesnt have manage roles perm,
         # or a role higher than the bot was given
         try:
             # Only allows specific roles
-            if role in (
-                ctx.guild.get_role(valid) for valid in config.roles.valid_roles
-            ):
+            if role in (ctx.guild.get_role(valid) for valid in valid_roles):
                 await ctx.author.add_roles(role)
                 await core.srite_send(
                     ctx, f"Role {role} added to {ctx.author.display_name}"
@@ -74,13 +78,16 @@ class Roles(commands.Cog):
     async def remove(self, ctx: commands.Context, role: discord.Role) -> None:
         """Removes a role from the author"""
         core.debug_info("Removing role", role, type(role))
+        if ctx.guild is None:
+            await core.srite_send(ctx, "This command is only available in a server.")
+            return
+        with model.Guild(guild=ctx.guild).open_roles() as roles_data:
+            valid_roles = roles_data["self_roles"]
         # Handles insufficient perms, which means that either the bot doesnt have manage roles perm,
         # or a role higher than the bot was given
         try:
             # Only allows specific roles
-            if role in (
-                ctx.guild.get_role(valid) for valid in config.roles.valid_roles
-            ):
+            if role in (ctx.guild.get_role(valid) for valid in valid_roles):
                 await ctx.author.remove_roles(role)
                 await core.srite_send(
                     ctx, f"Role {role} removed from {ctx.author.display_name}"
@@ -108,16 +115,50 @@ class Roles(commands.Cog):
         # Create embed
         embed = discord.Embed(color=config.bot.color, title="Available Roles")
 
-        # Pair roles with enumeration
-        for index, role in enumerate(
-            ctx.guild.get_role(value) for value in config.roles.valid_roles
-        ):
-            # Only try to display the role if it still exists
-            if role:
-                embed.add_field(name=index + 1, value=role.name)
+        with model.Guild(guild=ctx.guild).open_roles() as roles_data:
+            # Pair roles with enumeration
+            for index, role in enumerate(
+                ctx.guild.get_role(value) for value in roles_data["self_roles"]
+            ):
+                # Only try to display the role if it still exists
+                if role:
+                    embed.add_field(name=index + 1, value=role.name)
 
         # Send embed
         await ctx.send(embed=embed)
+
+    @roles.command()
+    @commands.has_permissions(manage_roles=True)
+    async def enable(self, ctx: commands.Context, role: discord.Role) -> None:
+        """Enable a role to be a self role."""
+        if ctx.guild is None:
+            await core.srite_send(ctx, "This command is only available in a server.")
+            return
+        with model.Guild(guild=ctx.guild).open_roles() as roles_data:
+            # Give a message if the role is already a self role
+            # This also avoids getting duplicates in the list
+            if role.id in roles_data["self_roles"]:
+                await core.srite_send(ctx, f"Role {role} is already a self role.")
+                return
+
+            roles_data["self_roles"].append(role.id)
+            await core.srite_send(ctx, f"Added role {role} to self role list.")
+
+    @roles.command()
+    @commands.has_permissions(manage_roles=True)
+    async def disable(self, ctx: commands.Context, role: discord.Role) -> None:
+        """Disable a role from being a self role."""
+        if ctx.guild is None:
+            await core.srite_send(ctx, "This command is only available in a server.")
+            return
+        with model.Guild(guild=ctx.guild).open_roles() as roles_data:
+            # Give a descriptive message if the role is not a self role
+            if role.id not in roles_data["self_roles"]:
+                await core.srite_send(ctx, f"Role {role} is not currently a self role.")
+                return
+
+            roles_data["self_roles"].remove(role.id)
+            await core.srite_send(ctx, f"Removed role {role} from self role list.")
 
 
 # Function to add cog
