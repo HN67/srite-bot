@@ -1,11 +1,15 @@
 """Moderation tools cog"""
 
+import time
+import typing as t
+
 # Import discord
 import discord
 from discord.ext import commands
 
 # Import core
 import core
+from modules import model
 
 
 class Moderation(commands.Cog):
@@ -68,7 +72,9 @@ class Moderation(commands.Cog):
             await message.delete()
 
     @mod.command()
-    async def members(self, ctx: commands.Context, guildID: int = None) -> None:
+    async def members(
+        self, ctx: commands.Context, guildID: t.Optional[int] = None
+    ) -> None:
         """Returns a list of all members in the guild (by id), defaults to current guild"""
         # Default to contextual guild to allow smooth usage
         # If number is given, retrieve the guild from bot
@@ -85,6 +91,50 @@ class Moderation(commands.Cog):
         await core.srite_send(
             ctx, "\n".join(member.mention for member in guild.members)
         )
+
+    @mod.command()
+    async def clean(self, ctx: commands.Context, before: discord.Message) -> None:
+        """Clean old messages from a channel.
+
+        Archives and removes all messages before the specified message.
+        """
+        core.debug_info("Running clean command")
+
+        limit = 1000
+        await core.srite_send(
+            ctx, f"Collecting oldest {limit} messages before {before.id}."
+        )
+
+        messages: t.List[discord.Message] = [
+            message
+            async for message in ctx.channel.history(
+                limit=1000, before=before, oldest_first=True
+            )
+        ]
+
+        message_data = [
+            {
+                "guild": message.guild.id,
+                "channel": message.channel.id,
+                "id": message.id,
+                "author": message.author.id,
+                "author_name": message.author.name,
+                "content": message.content,
+                "time": str(message.created_at),
+            }
+            for message in messages
+        ]
+
+        # core.debug_info(*messages)
+
+        model.archive(name=str(int(time.time())), data=message_data)
+        await core.srite_send(ctx, "Archived messages.")
+
+        await core.srite_send(ctx, "Deleting messages.")
+        for message in messages:
+            await message.delete()
+
+        await core.srite_send(ctx, "Messages cleaned.")
 
 
 # Function to add cog

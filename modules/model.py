@@ -19,6 +19,18 @@ def data_path(path: object) -> str:
     return f"data/{path}"
 
 
+def archive(name: str, data: object) -> None:
+    """Save the given object as JSON in the archive under the given name."""
+    folder = data_path("archive")
+    path = f"{folder}/{name}"
+    # Ensure directory exists
+    if not Path(folder).is_dir():
+        Path(folder).mkdir()
+    # Dump data into file
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(data, file)
+
+
 class User:
     """Model to represent SriteBot data for a specific user."""
 
