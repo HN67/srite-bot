@@ -21,10 +21,11 @@ import core
 # Set cwd so that bot can be run from anywhere and still functions correctly
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-
-# Initialize bot
 bot = commands.Bot(
-    command_prefix=config.bot.prefixes, description="General bot created by HN67"
+    command_prefix=config.bot.prefixes,
+    description="General bot created by HN67",
+    # Enable all intents, especially members and message_content
+    intents=discord.Intents.all(),
 )
 
 
@@ -72,7 +73,6 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError) 
     # Only run global handler if command-local is not provided
     # hasattr technique taken from discord.py default on_command_error source
     if not hasattr(ctx.command, "on_error"):
-
         # Notify user so that the bot doesn't silently fail
         await core.srite_send(ctx, f"Oops, something went wrong.\n```{error}```")
 

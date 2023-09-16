@@ -22,6 +22,19 @@ class Roles(commands.Cog):
         await core.srite_send(ctx, "Specify a subcommand, such as `add` or `remove`")
 
     @roles.command()
+    async def members(self, ctx: commands.Context, role: discord.Role) -> None:
+        """List all members of a role."""
+        # Create embed
+        embed = discord.Embed(color=config.bot.color, title=role.name)
+
+        for member in role.members:
+            # Add each member as a nameless field not inline
+            embed.add_field(name="", value=member.display_name, inline=False)
+
+        # Send embed
+        await ctx.send(embed=embed)
+
+    @roles.command()
     async def add(self, ctx: commands.Context, role: discord.Role) -> None:
         """Adds a role to the author"""
         core.debug_info("Adding role", role, type(role))
